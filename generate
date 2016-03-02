@@ -2,65 +2,77 @@
 import templates
 from config import config
 
-# generate header
-
-str_h = []
-str_h.append(templates.header(year=config.year, author=config.author))
-str_h.append('#ifndef MICROPY_EXTMOD_MOD{MODULE}'.format(MODULE=config.MODULE))
-str_h.append('#define MICROPY_EXTMOD_MOD{MODULE}'.format(MODULE=config.MODULE))
-str_h.append('')
-
-for f, t in config.functions.items():
-    str_h.append('extern mp_obj_t mod_{module}_{function}(mp_obj_t data);'.format(module=config.module, function=f))
-
-str_h.append('')
-
-for f, t in config.functions.items():
-    str_h.append('MP_DECLARE_CONST_FUN_OBJ(mod_{module}_{function}_obj);'.format(module=config.module, function=f))
-
-str_h.append('')
-str_h.append('#endif // MICROPY_EXTMOD_MOD{MODULE}'.format(MODULE=config.MODULE))
-
 # generate source
 
-str_c = []
-str_c.append(templates.header(year=config.year, author=config.author))
-str_c.append(templates.includes(module=config.module))
+src = []
+src.append(templates.header(year=config.year, author=config.author))
 
-for f, t in config.functions.items():
-    str_c.append('mp_obj_t mod_{module}_{function}(mp_obj_t data) {{'.format(module=config.module, function=f))
-    str_c.append('// FILL ME')
-    str_c.append('}')
-    str_c.append('MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=config.module, function=f))
-    str_c.append('')
+for f in config.functions:
+    if f.type == '0':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(void) {{'.format(module=config.module, function=f.name))
+    elif f.type == '1':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t arg) {{'.format(module=config.module, function=f.name))
+    elif f.type == '2':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t arg1, mp_obj_t arg2) {{'.format(module=config.module, function=f.name))
+    elif f.type == '3':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t arg1, mp_obj_t arg2, mp_obj_t arg3) {{'.format(module=config.module, function=f.name))
+    elif f.type == 'var':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{'.format(module=config.module, function=f.name))
+    elif f.type == 'var_between':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{'.format(module=config.module, function=f.name))
+    elif f.type == 'kw':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {{'.format(module=config.module, function=f.name))
+    else:
+        raise Exception('Unknown function type: {type}'.format(type=f.type))
 
-str_c.append('#if MICROPY_PY_{MODULE}'.format(MODULE=config.MODULE))
-str_c.append('')
+    src.append('    // TODO')
+    src.append('    return mp_const_none;')
+    src.append('}')
 
-str_c.append('STATIC const mp_rom_map_elem_t mp_module_{module}_globals_table[] = {{'.format(module=config.module))
-str_c.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},'.format(module=config.module))
+    if f.type == '0':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_0(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=config.module, function=f.name))
+    elif f.type == '1':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=config.module, function=f.name))
+    elif f.type == '2':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_2(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=config.module, function=f.name))
+    elif f.type == '3':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_3(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=config.module, function=f.name))
+    elif f.type == 'var':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_VAR(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});'.format(module=config.module, function=f.name, args_min=f.args_min))
+    elif f.type == 'var_between':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN_(mod_{module}_{function}_obj, {args_min}, {args_max}, mod_{module}_{function});'.format(module=config.module, function=f.name, args_min=f.args_min, args_max=f.args_max))
+    elif f.type == 'kw':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_KW(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});'.format(module=config.module, function=f.name, args_min=f.args_min))
+    else:
+        raise Exception('Unknown function type: {type}'.format(type=f.type))
 
-for f, t in config.functions.items():
-    str_c.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{function}_obj) }},'.format(module=config.module, function=f))
+    src.append('')
 
-str_c.append('};')
-str_c.append('')
+src.append('#if MICROPY_PY_{MODULE}'.format(MODULE=config.MODULE))
+src.append('')
 
-str_c.append('STATIC MP_DEFINE_CONST_DICT(mp_module_{module}_globals, mp_module_{module}_globals_table);'.format(module=config.module))
-str_c.append('')
+src.append('STATIC const mp_rom_map_elem_t mp_module_{module}_globals_table[] = {{'.format(module=config.module))
+src.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},'.format(module=config.module))
 
-str_c.append('const mp_obj_module_t mp_module_{module} = {{'.format(module=config.module))
-str_c.append('    .base = { &mp_type_module },')
-str_c.append('    .name = MP_QSTR_{module},'.format(module=config.module))
-str_c.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,'.format(module=config.module))
-str_c.append('};')
-str_c.append('')
+for f in config.functions:
+    src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{function}_obj) }},'.format(module=config.module, function=f.name))
 
-str_c.append('#endif // MICROPY_PY_{MODULE}'.format(MODULE=config.MODULE))
+src.append('};')
+src.append('')
+
+src.append('STATIC MP_DEFINE_CONST_DICT(mp_module_{module}_globals, mp_module_{module}_globals_table);'.format(module=config.module))
+src.append('')
+
+src.append('const mp_obj_module_t mp_module_{module} = {{'.format(module=config.module))
+src.append('    .base = { &mp_type_module },')
+src.append('    .name = MP_QSTR_{module},'.format(module=config.module))
+src.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,'.format(module=config.module))
+src.append('};')
+src.append('')
+
+src.append('#endif // MICROPY_PY_{MODULE}'.format(MODULE=config.MODULE))
 
 # write to files
 
 with open('output/mod{module}.c'.format(module=config.module), 'w') as f:
-    f.write('\n'.join(str_c))
-with open('output/mod{module}.h'.format(module=config.module), 'w') as f:
-    f.write('\n'.join(str_h))
+    f.write('\n'.join(src))
