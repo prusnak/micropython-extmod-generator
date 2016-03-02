@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+import templates
+from config import config
+
+# generate header
+
+str_h = []
+str_h.append(templates.header(year=config.year, author=config.author))
+str_h.append('#ifndef MICROPY_EXTMOD_MOD{MODULE}'.format(MODULE=config.MODULE))
+str_h.append('#define MICROPY_EXTMOD_MOD{MODULE}'.format(MODULE=config.MODULE))
+str_h.append('')
+
+for f, t in config.functions.items():
+    str_h.append('extern mp_obj_t mod_{module}_{function}(mp_obj_t data);'.format(module=config.module, function=f))
+
+str_h.append('')
+
+for f, t in config.functions.items():
+    str_h.append('MP_DECLARE_CONST_FUN_OBJ(mod_{module}_{function}_obj);'.format(module=config.module, function=f))
+
+str_h.append('')
+str_h.append('#endif // MICROPY_EXTMOD_MOD{MODULE}'.format(MODULE=config.MODULE))
+
+# generate source
+
+str_c = []
+str_c.append(templates.header(year=config.year, author=config.author))
+str_c.append(templates.includes(module=config.module))
+
+for f, t in config.functions.items():
+    str_c.append('mp_obj_t mod_{module}_{function}(mp_obj_t data) {{'.format(module=config.module, function=f))
+    str_c.append('// FILL ME')
+    str_c.append('}')
+    str_c.append('MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=config.module, function=f))
+    str_c.append('')
+
+str_c.append('#if MICROPY_PY_{MODULE}'.format(MODULE=config.MODULE))
+str_c.append('')
+
+str_c.append('STATIC const mp_rom_map_elem_t mp_module_{module}_globals_table[] = {{'.format(module=config.module))
+str_c.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},'.format(module=config.module))
+
+for f, t in config.functions.items():
+    str_c.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{function}_obj) }},'.format(module=config.module, function=f))
+
+str_c.append('};')
+str_c.append('')
+
+str_c.append('STATIC MP_DEFINE_CONST_DICT(mp_module_{module}_globals, mp_module_{module}_globals_table);'.format(module=config.module))
+str_c.append('')
+
+str_c.append('const mp_obj_module_t mp_module_{module} = {{'.format(module=config.module))
+str_c.append('    .base = { &mp_type_module },')
+str_c.append('    .name = MP_QSTR_{module},'.format(module=config.module))
+str_c.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,'.format(module=config.module))
+str_c.append('};')
+str_c.append('')
+
+str_c.append('#endif // MICROPY_PY_{MODULE}'.format(MODULE=config.MODULE))
+
+# write to files
+
+with open('output/mod{module}.c'.format(module=config.module), 'w') as f:
+    f.write('\n'.join(str_c))
+with open('output/mod{module}.h'.format(module=config.module), 'w') as f:
+    f.write('\n'.join(str_h))
