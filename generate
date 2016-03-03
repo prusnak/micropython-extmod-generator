@@ -61,7 +61,9 @@ class Class(object):
 class Module(object):
 
     def __init__(self, name):
+        print('Looking for module "{name}":'.format(name=name))
         self.module = importlib.import_module(name)
+        print('Found {mod}'.format(mod=self.module))
         self.year = datetime.datetime.now().year
         self.name = name
         self.NAME = name.upper()
@@ -82,6 +84,7 @@ class Module(object):
                     if isinstance(b, types.FunctionType): # method
                         c.add_method(m, inspect.getargspec(b))
                 self.classes.append(c)
+        print('Parsed OK ... loaded {f} functions and {c} classes with {m} methods'.format(f=len(self.functions), c=len(self.classes), m=sum([ len(c.methods) for c in self.classes ])))
 
 
 class Source(object):
@@ -97,8 +100,10 @@ class Source(object):
         self.lines.append(line.format(**kwargs))
 
     def save(self):
-        with open('mod{module}.c'.format(module=self.module.name), 'w') as f:
+        fn = 'mod{module}.c'.format(module=self.module.name)
+        with open(fn, 'w') as f:
             f.write('\n'.join(self.lines))
+        print('Saved as {fn}'.format(fn=fn))
 
 
 def generate_function(src, f):
@@ -171,6 +176,7 @@ def generate_class(src, c):
 
 def generate(module):
 
+    print('Generating source code:')
     src = Source(module)
 
     for f in module.functions:
@@ -199,6 +205,8 @@ def generate(module):
     src.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,')
     src.append('}};')
 
+
+    print('Done')
     src.save()
 
 
