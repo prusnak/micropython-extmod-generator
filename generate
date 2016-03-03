@@ -1,78 +1,140 @@
 #!/usr/bin/env python3
+import datetime
+import importlib
+import types
+import inspect
+
 import templates
-from config import config
 
-# generate source
 
-src = []
-src.append(templates.header(year=config.year, author=config.author))
+class Function(object):
 
-for f in config.functions:
-    if f.type == '0':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(void) {{'.format(module=config.module, function=f.name))
-    elif f.type == '1':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t arg) {{'.format(module=config.module, function=f.name))
-    elif f.type == '2':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t arg1, mp_obj_t arg2) {{'.format(module=config.module, function=f.name))
-    elif f.type == '3':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t arg1, mp_obj_t arg2, mp_obj_t arg3) {{'.format(module=config.module, function=f.name))
-    elif f.type == 'var':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{'.format(module=config.module, function=f.name))
-    elif f.type == 'var_between':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{'.format(module=config.module, function=f.name))
-    elif f.type == 'kw':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {{'.format(module=config.module, function=f.name))
-    else:
-        raise Exception('Unknown function type: {type}'.format(type=f.type))
+    def __init__(self, name, argspec):
+        self.name = name
+        self.args = argspec.args
 
-    src.append('    // TODO')
-    src.append('    return mp_const_none;')
-    src.append('}')
+        if argspec.varargs is None and argspec.keywords is None and argspec.defaults is None:
+            if len(self.args) >= 0 and len(self.args) <= 3:
+                self.type = str(len(self.args))
+            else:
+                self.type = 'var_between'
+                self.args_min = len(self.args)
+                self.args_max = len(self.args)
+            return
 
-    if f.type == '0':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_0(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=config.module, function=f.name))
-    elif f.type == '1':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=config.module, function=f.name))
-    elif f.type == '2':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_2(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=config.module, function=f.name))
-    elif f.type == '3':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_3(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=config.module, function=f.name))
-    elif f.type == 'var':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_VAR(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});'.format(module=config.module, function=f.name, args_min=f.args_min))
-    elif f.type == 'var_between':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN_(mod_{module}_{function}_obj, {args_min}, {args_max}, mod_{module}_{function});'.format(module=config.module, function=f.name, args_min=f.args_min, args_max=f.args_max))
-    elif f.type == 'kw':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_KW(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});'.format(module=config.module, function=f.name, args_min=f.args_min))
-    else:
-        raise Exception('Unknown function type: {type}'.format(type=f.type))
+        if argspec.varargs is None and argspec.keywords is None:
+            self.type = 'var_between'
+            self.args_min = len(self.args) - len(argspec.defaults)
+            self.args_max = len(self.args)
+            return
 
+        if argspec.keywords is None and argspec.defaults is None:
+            self.type = 'var'
+            self.args_min = len(self.args)
+            return
+
+        if argspec.varargs is None and argspec.defaults is None:
+            self.type = 'kw'
+            self.args_min = len(self.args)
+            return
+
+        raise Exception('Unsupported function type')
+
+
+class Module(object):
+
+    def __init__(self, name):
+        self.module = importlib.import_module(name)
+        self.year = datetime.datetime.now().year
+        self.name = name
+        self.NAME = name.upper()
+        self.author = self.module.AUTHOR
+        self.functions = []
+        for n in dir(self.module):
+            a = getattr(self.module, n)
+            if isinstance(a, types.FunctionType):
+                f = Function(n, inspect.getargspec(a))
+                self.functions.append(f)
+
+
+def generate(module):
+
+    src = []
+    src.append(templates.header(year=module.year, author=module.author))
+
+    for f in module.functions:
+        if f.type == '0':
+            src.append('STATIC mp_obj_t mod_{module}_{function}(void) {{'.format(module=module.name, function=f.name))
+        elif f.type == '1':
+            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}) {{'.format(module=module.name, function=f.name, args=f.args))
+        elif f.type == '2':
+            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}) {{'.format(module=module.name, function=f.name, args=f.args))
+        elif f.type == '3':
+            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}, mp_obj_t {args[2]}) {{'.format(module=module.name, function=f.name, args=f.args))
+        elif f.type == 'var':
+            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{'.format(module=module.name, function=f.name))
+        elif f.type == 'var_between':
+            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{'.format(module=module.name, function=f.name))
+        elif f.type == 'kw':
+            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {{'.format(module=module.name, function=f.name))
+        else:
+            raise Exception('Unknown function type: {type}'.format(type=f.type))
+
+        src.append('    // TODO')
+        src.append('    return mp_const_none;')
+        src.append('}')
+
+        if f.type == '0':
+            src.append('MP_DEFINE_CONST_FUN_OBJ_0(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=module.name, function=f.name))
+        elif f.type == '1':
+            src.append('MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=module.name, function=f.name))
+        elif f.type == '2':
+            src.append('MP_DEFINE_CONST_FUN_OBJ_2(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=module.name, function=f.name))
+        elif f.type == '3':
+            src.append('MP_DEFINE_CONST_FUN_OBJ_3(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=module.name, function=f.name))
+        elif f.type == 'var':
+            src.append('MP_DEFINE_CONST_FUN_OBJ_VAR(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});'.format(module=module.name, function=f.name, args_min=f.args_min))
+        elif f.type == 'var_between':
+            src.append('MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_{module}_{function}_obj, {args_min}, {args_max}, mod_{module}_{function});'.format(module=module.name, function=f.name, args_min=f.args_min, args_max=f.args_max))
+        elif f.type == 'kw':
+            src.append('MP_DEFINE_CONST_FUN_OBJ_KW(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});'.format(module=module.name, function=f.name, args_min=f.args_min))
+        else:
+            raise Exception('Unknown function type: {type}'.format(type=f.type))
+
+        src.append('')
+
+    src.append('#if MICROPY_PY_{MODULE}'.format(MODULE=module.NAME))
     src.append('')
 
-src.append('#if MICROPY_PY_{MODULE}'.format(MODULE=config.MODULE))
-src.append('')
+    src.append('STATIC const mp_rom_map_elem_t mp_module_{module}_globals_table[] = {{'.format(module=module.name))
+    src.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},'.format(module=module.name))
 
-src.append('STATIC const mp_rom_map_elem_t mp_module_{module}_globals_table[] = {{'.format(module=config.module))
-src.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},'.format(module=config.module))
+    for f in module.functions:
+        src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{function}_obj) }},'.format(module=module.name, function=f.name))
 
-for f in config.functions:
-    src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{function}_obj) }},'.format(module=config.module, function=f.name))
+    src.append('};')
+    src.append('')
 
-src.append('};')
-src.append('')
+    src.append('STATIC MP_DEFINE_CONST_DICT(mp_module_{module}_globals, mp_module_{module}_globals_table);'.format(module=module.name))
+    src.append('')
 
-src.append('STATIC MP_DEFINE_CONST_DICT(mp_module_{module}_globals, mp_module_{module}_globals_table);'.format(module=config.module))
-src.append('')
+    src.append('const mp_obj_module_t mp_module_{module} = {{'.format(module=module.name))
+    src.append('    .base = { &mp_type_module },')
+    src.append('    .name = MP_QSTR_{module},'.format(module=module.name))
+    src.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,'.format(module=module.name))
+    src.append('};')
+    src.append('')
 
-src.append('const mp_obj_module_t mp_module_{module} = {{'.format(module=config.module))
-src.append('    .base = { &mp_type_module },')
-src.append('    .name = MP_QSTR_{module},'.format(module=config.module))
-src.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,'.format(module=config.module))
-src.append('};')
-src.append('')
+    src.append('#endif // MICROPY_PY_{MODULE}'.format(MODULE=module.NAME))
 
-src.append('#endif // MICROPY_PY_{MODULE}'.format(MODULE=config.MODULE))
+    with open('mod{module}.c'.format(module=module.name), 'w') as f:
+        f.write('\n'.join(src))
 
-# write to files
 
-with open('output/mod{module}.c'.format(module=config.module), 'w') as f:
-    f.write('\n'.join(src))
+def main():
+    module = Module('example')
+    generate(module)
+
+
+if __name__ == "__main__":
+    main()
