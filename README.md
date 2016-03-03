@@ -17,8 +17,7 @@ If an argument is not provided, the default `example` will be used.
 Example
 -------
 
-* input: [example.py](example.py)
-* output: [modexample.c](modexample.c)
+[example.py](example.py) ⇒ [modexample.c](modexample.c)
 
 License
 -------
