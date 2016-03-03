@@ -1,5 +1,5 @@
 def header(**kwargs):
-    return """/*
+    return '''/*
  * This file is part of the Micro Python project, http://micropython.org/
  *
  * The MIT License (MIT)
@@ -32,4 +32,4 @@ def header(**kwargs):
 #include "py/nlr.h"
 #include "py/runtime.h"
 #include "py/binary.h"
-""".format(**kwargs)
+'''.format(**kwargs)

@@ -57,78 +57,93 @@ class Module(object):
                 self.functions.append(f)
 
 
+class Source(object):
+
+    def __init__(self, module):
+        self.module = module
+        self.lines = []
+        self.lines.append(templates.header(year=self.module.year, author=self.module.author))
+
+    def append(self, line, **kwargs):
+        kwargs['module'] = self.module.name
+        kwargs['MODULE'] = self.module.NAME
+        self.lines.append(line.format(**kwargs))
+
+    def save(self):
+        with open('mod{module}.c'.format(module=self.module.name), 'w') as f:
+            f.write('\n'.join(self.lines))
+
+
 def generate(module):
 
-    src = []
-    src.append(templates.header(year=module.year, author=module.author))
+    src = Source(module)
 
     for f in module.functions:
         if f.type == '0':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(void) {{'.format(module=module.name, function=f.name))
+            src.append('STATIC mp_obj_t mod_{module}_{function}(void) {{', function=f.name)
         elif f.type == '1':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}) {{'.format(module=module.name, function=f.name, args=f.args))
+            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}) {{', function=f.name, args=f.args)
         elif f.type == '2':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}) {{'.format(module=module.name, function=f.name, args=f.args))
+            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}) {{', function=f.name, args=f.args)
         elif f.type == '3':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}, mp_obj_t {args[2]}) {{'.format(module=module.name, function=f.name, args=f.args))
+            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}, mp_obj_t {args[2]}) {{', function=f.name, args=f.args)
         elif f.type == 'var':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{'.format(module=module.name, function=f.name))
+            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.name)
         elif f.type == 'var_between':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{'.format(module=module.name, function=f.name))
+            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.name)
         elif f.type == 'kw':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {{'.format(module=module.name, function=f.name))
+            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {{', function=f.name)
         else:
             raise Exception('Unknown function type: {type}'.format(type=f.type))
 
         src.append('    // TODO')
         src.append('    return mp_const_none;')
-        src.append('}')
+        src.append('}}')
 
         if f.type == '0':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_0(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=module.name, function=f.name))
+            src.append('MP_DEFINE_CONST_FUN_OBJ_0(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
         elif f.type == '1':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=module.name, function=f.name))
+            src.append('MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
         elif f.type == '2':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_2(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=module.name, function=f.name))
+            src.append('MP_DEFINE_CONST_FUN_OBJ_2(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
         elif f.type == '3':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_3(mod_{module}_{function}_obj, mod_{module}_{function});'.format(module=module.name, function=f.name))
+            src.append('MP_DEFINE_CONST_FUN_OBJ_3(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
         elif f.type == 'var':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_VAR(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});'.format(module=module.name, function=f.name, args_min=f.args_min))
+            src.append('MP_DEFINE_CONST_FUN_OBJ_VAR(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.name, args_min=f.args_min)
         elif f.type == 'var_between':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_{module}_{function}_obj, {args_min}, {args_max}, mod_{module}_{function});'.format(module=module.name, function=f.name, args_min=f.args_min, args_max=f.args_max))
+            src.append('MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_{module}_{function}_obj, {args_min}, {args_max}, mod_{module}_{function});', function=f.name, args_min=f.args_min, args_max=f.args_max)
         elif f.type == 'kw':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_KW(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});'.format(module=module.name, function=f.name, args_min=f.args_min))
+            src.append('MP_DEFINE_CONST_FUN_OBJ_KW(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.name, args_min=f.args_min)
         else:
             raise Exception('Unknown function type: {type}'.format(type=f.type))
 
         src.append('')
 
-    src.append('#if MICROPY_PY_{MODULE}'.format(MODULE=module.NAME))
+    src.append('#if MICROPY_PY_{MODULE}')
     src.append('')
 
-    src.append('STATIC const mp_rom_map_elem_t mp_module_{module}_globals_table[] = {{'.format(module=module.name))
-    src.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},'.format(module=module.name))
+    src.append('STATIC const mp_rom_map_elem_t mp_module_{module}_globals_table[] = {{')
+    src.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},')
 
     for f in module.functions:
-        src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{function}_obj) }},'.format(module=module.name, function=f.name))
+        src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{function}_obj) }},', function=f.name)
 
-    src.append('};')
+    src.append('}};')
     src.append('')
 
-    src.append('STATIC MP_DEFINE_CONST_DICT(mp_module_{module}_globals, mp_module_{module}_globals_table);'.format(module=module.name))
+    src.append('STATIC MP_DEFINE_CONST_DICT(mp_module_{module}_globals, mp_module_{module}_globals_table);')
     src.append('')
 
-    src.append('const mp_obj_module_t mp_module_{module} = {{'.format(module=module.name))
-    src.append('    .base = { &mp_type_module },')
-    src.append('    .name = MP_QSTR_{module},'.format(module=module.name))
-    src.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,'.format(module=module.name))
-    src.append('};')
+    src.append('const mp_obj_module_t mp_module_{module} = {{')
+    src.append('    .base = {{ &mp_type_module }},')
+    src.append('    .name = MP_QSTR_{module},')
+    src.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,')
+    src.append('}};')
     src.append('')
 
-    src.append('#endif // MICROPY_PY_{MODULE}'.format(MODULE=module.NAME))
+    src.append('#endif // MICROPY_PY_{MODULE}')
 
-    with open('mod{module}.c'.format(module=module.name), 'w') as f:
-        f.write('\n'.join(src))
+    src.save()
 
 
 def main():
