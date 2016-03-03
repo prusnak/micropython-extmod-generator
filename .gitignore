@@ -1,3 +1,4 @@
 *.c
 *.h
 __pycache__
+!modexample.c
