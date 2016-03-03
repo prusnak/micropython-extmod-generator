@@ -1,4 +1,4 @@
-AUTHOR = 'Pavol Rusnak'
+_author = 'Pavol Rusnak'
 
 def func_a():
     pass
