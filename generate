@@ -74,49 +74,51 @@ class Source(object):
             f.write('\n'.join(self.lines))
 
 
+def generate_function(src, f):
+    if f.type == '0':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(void) {{', function=f.name)
+    elif f.type == '1':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}) {{', function=f.name, args=f.args)
+    elif f.type == '2':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}) {{', function=f.name, args=f.args)
+    elif f.type == '3':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}, mp_obj_t {args[2]}) {{', function=f.name, args=f.args)
+    elif f.type == 'var':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.name)
+    elif f.type == 'var_between':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.name)
+    elif f.type == 'kw':
+        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {{', function=f.name)
+    else:
+        raise Exception('Unknown function type: {type}'.format(type=f.type))
+
+    src.append('    // TODO')
+    src.append('    return mp_const_none;')
+    src.append('}}')
+
+    if f.type == '0':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_0(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
+    elif f.type == '1':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
+    elif f.type == '2':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_2(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
+    elif f.type == '3':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_3(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
+    elif f.type == 'var':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_VAR(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.name, args_min=f.args_min)
+    elif f.type == 'var_between':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_{module}_{function}_obj, {args_min}, {args_max}, mod_{module}_{function});', function=f.name, args_min=f.args_min, args_max=f.args_max)
+    elif f.type == 'kw':
+        src.append('MP_DEFINE_CONST_FUN_OBJ_KW(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.name, args_min=f.args_min)
+    else:
+        raise Exception('Unknown function type: {type}'.format(type=f.type))
+
 def generate(module):
 
     src = Source(module)
 
     for f in module.functions:
-        if f.type == '0':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(void) {{', function=f.name)
-        elif f.type == '1':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}) {{', function=f.name, args=f.args)
-        elif f.type == '2':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}) {{', function=f.name, args=f.args)
-        elif f.type == '3':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}, mp_obj_t {args[2]}) {{', function=f.name, args=f.args)
-        elif f.type == 'var':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.name)
-        elif f.type == 'var_between':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.name)
-        elif f.type == 'kw':
-            src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {{', function=f.name)
-        else:
-            raise Exception('Unknown function type: {type}'.format(type=f.type))
-
-        src.append('    // TODO')
-        src.append('    return mp_const_none;')
-        src.append('}}')
-
-        if f.type == '0':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_0(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
-        elif f.type == '1':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
-        elif f.type == '2':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_2(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
-        elif f.type == '3':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_3(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.name)
-        elif f.type == 'var':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_VAR(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.name, args_min=f.args_min)
-        elif f.type == 'var_between':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_{module}_{function}_obj, {args_min}, {args_max}, mod_{module}_{function});', function=f.name, args_min=f.args_min, args_max=f.args_max)
-        elif f.type == 'kw':
-            src.append('MP_DEFINE_CONST_FUN_OBJ_KW(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.name, args_min=f.args_min)
-        else:
-            raise Exception('Unknown function type: {type}'.format(type=f.type))
-
+        generate_function(src, f)
         src.append('')
 
     src.append('#if MICROPY_PY_{MODULE}')
