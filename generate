@@ -67,7 +67,7 @@ class Module(object):
         self.year = datetime.datetime.now().year
         self.name = name
         self.NAME = name.upper()
-        self.author = self.module._author
+        self.author = self.module.__author__
         self.functions = []
         self.classes = []
         for n in dir(self.module):

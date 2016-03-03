@@ -1,4 +1,4 @@
-_author = 'Pavol Rusnak'
+__author__ = 'Pavol Rusnak'
 
 
 def func_a():
