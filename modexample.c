@@ -86,83 +86,83 @@ STATIC mp_obj_t mod_example_func_i(size_t n_args, const mp_obj_t *args, mp_map_t
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mod_example_func_i_obj, 2, mod_example_func_i);
 
-STATIC mp_obj_t mod_example_Klass_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+STATIC mp_obj_t mod_example_Class_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 
-STATIC mp_obj_t mod_example_Klass_func_a(mp_obj_t self) {
+STATIC mp_obj_t mod_example_Class_func_a(mp_obj_t self) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(mod_example_Klass_func_a_obj, mod_example_Klass_func_a);
+MP_DEFINE_CONST_FUN_OBJ_1(mod_example_Class_func_a_obj, mod_example_Class_func_a);
 
-STATIC mp_obj_t mod_example_Klass_func_b(mp_obj_t self, mp_obj_t arg1) {
+STATIC mp_obj_t mod_example_Class_func_b(mp_obj_t self, mp_obj_t arg1) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_example_Klass_func_b_obj, mod_example_Klass_func_b);
+MP_DEFINE_CONST_FUN_OBJ_2(mod_example_Class_func_b_obj, mod_example_Class_func_b);
 
-STATIC mp_obj_t mod_example_Klass_func_c(mp_obj_t self, mp_obj_t arg1, mp_obj_t arg2) {
+STATIC mp_obj_t mod_example_Class_func_c(mp_obj_t self, mp_obj_t arg1, mp_obj_t arg2) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_3(mod_example_Klass_func_c_obj, mod_example_Klass_func_c);
+MP_DEFINE_CONST_FUN_OBJ_3(mod_example_Class_func_c_obj, mod_example_Class_func_c);
 
-STATIC mp_obj_t mod_example_Klass_func_d(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_example_Class_func_d(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Klass_func_d_obj, 4, 4, mod_example_Klass_func_d);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Class_func_d_obj, 4, 4, mod_example_Class_func_d);
 
-STATIC mp_obj_t mod_example_Klass_func_e(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_example_Class_func_e(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Klass_func_e_obj, 5, 5, mod_example_Klass_func_e);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Class_func_e_obj, 5, 5, mod_example_Class_func_e);
 
-STATIC mp_obj_t mod_example_Klass_func_f(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_example_Class_func_f(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Klass_func_f_obj, 6, 6, mod_example_Klass_func_f);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Class_func_f_obj, 6, 6, mod_example_Class_func_f);
 
-STATIC mp_obj_t mod_example_Klass_func_g(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_example_Class_func_g(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Klass_func_g_obj, 3, 5, mod_example_Klass_func_g);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Class_func_g_obj, 3, 5, mod_example_Class_func_g);
 
-STATIC mp_obj_t mod_example_Klass_func_h(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_example_Class_func_h(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR(mod_example_Klass_func_h_obj, 4, mod_example_Klass_func_h);
+MP_DEFINE_CONST_FUN_OBJ_VAR(mod_example_Class_func_h_obj, 4, mod_example_Class_func_h);
 
-STATIC mp_obj_t mod_example_Klass_func_i(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {
+STATIC mp_obj_t mod_example_Class_func_i(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_KW(mod_example_Klass_func_i_obj, 3, mod_example_Klass_func_i);
+MP_DEFINE_CONST_FUN_OBJ_KW(mod_example_Class_func_i_obj, 3, mod_example_Class_func_i);
 
-STATIC const mp_rom_map_elem_t mod_example_Klass_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_func_a), MP_ROM_PTR(&mod_example_Klass_func_a_obj) },
-    { MP_ROM_QSTR(MP_QSTR_func_b), MP_ROM_PTR(&mod_example_Klass_func_b_obj) },
-    { MP_ROM_QSTR(MP_QSTR_func_c), MP_ROM_PTR(&mod_example_Klass_func_c_obj) },
-    { MP_ROM_QSTR(MP_QSTR_func_d), MP_ROM_PTR(&mod_example_Klass_func_d_obj) },
-    { MP_ROM_QSTR(MP_QSTR_func_e), MP_ROM_PTR(&mod_example_Klass_func_e_obj) },
-    { MP_ROM_QSTR(MP_QSTR_func_f), MP_ROM_PTR(&mod_example_Klass_func_f_obj) },
-    { MP_ROM_QSTR(MP_QSTR_func_g), MP_ROM_PTR(&mod_example_Klass_func_g_obj) },
-    { MP_ROM_QSTR(MP_QSTR_func_h), MP_ROM_PTR(&mod_example_Klass_func_h_obj) },
-    { MP_ROM_QSTR(MP_QSTR_func_i), MP_ROM_PTR(&mod_example_Klass_func_i_obj) },
+STATIC const mp_rom_map_elem_t mod_example_Class_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_func_a), MP_ROM_PTR(&mod_example_Class_func_a_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_b), MP_ROM_PTR(&mod_example_Class_func_b_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_c), MP_ROM_PTR(&mod_example_Class_func_c_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_d), MP_ROM_PTR(&mod_example_Class_func_d_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_e), MP_ROM_PTR(&mod_example_Class_func_e_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_f), MP_ROM_PTR(&mod_example_Class_func_f_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_g), MP_ROM_PTR(&mod_example_Class_func_g_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_h), MP_ROM_PTR(&mod_example_Class_func_h_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_i), MP_ROM_PTR(&mod_example_Class_func_i_obj) },
 };
-STATIC MP_DEFINE_CONST_DICT(mod_example_Klass_locals_dict, mod_example_Klass_locals_dict_table);
+STATIC MP_DEFINE_CONST_DICT(mod_example_Class_locals_dict, mod_example_Class_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_example_Klass_type = {
+STATIC const mp_obj_type_t mod_example_Class_type = {
     { &mp_type_type },
-    .name = MP_QSTR_Klass,
-    .make_new = mod_example_Klass_make_new,
-    .locals_dict = (void*)&mod_example_Klass_locals_dict,
+    .name = MP_QSTR_Class,
+    .make_new = mod_example_Class_make_new,
+    .locals_dict = (void*)&mod_example_Class_locals_dict,
 };
 
 STATIC const mp_rom_map_elem_t mp_module_example_globals_table[] = {
@@ -176,7 +176,7 @@ STATIC const mp_rom_map_elem_t mp_module_example_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_func_g), MP_ROM_PTR(&mod_example_func_g_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_h), MP_ROM_PTR(&mod_example_func_h_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_i), MP_ROM_PTR(&mod_example_func_i_obj) },
-    { MP_ROM_QSTR(MP_QSTR_Klass), MP_ROM_PTR(&mod_example_Klass_type) },
+    { MP_ROM_QSTR(MP_QSTR_Class), MP_ROM_PTR(&mod_example_Class_type) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_example_globals, mp_module_example_globals_table);

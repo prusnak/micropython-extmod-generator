@@ -29,7 +29,7 @@ def func_i(arg1, arg2, **kwargs):
     pass
 
 
-class Klass(object):
+class Class(object):
 
     def __init__(self):
         pass
