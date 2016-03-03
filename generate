@@ -4,6 +4,7 @@ import datetime
 import importlib
 import types
 import inspect
+import sys
 
 import templates
 
@@ -202,7 +203,10 @@ def generate(module):
 
 
 def main():
-    module = Module('example')
+    if len(sys.argv) > 1:
+        module = Module(sys.argv[1])
+    else:
+        module = Module('example')
     generate(module)
 
 
