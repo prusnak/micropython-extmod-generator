@@ -5,6 +5,7 @@ import importlib
 import types
 import inspect
 import sys
+import re
 
 import templates
 
@@ -93,17 +94,28 @@ class Source(object):
         self.module = module
         self.lines = []
         self.lines.append(templates.header(year=self.module.year, author=self.module.author))
+        self.qstrdefs = []
 
     def append(self, line, **kwargs):
         kwargs['module'] = self.module.name
         kwargs['MODULE'] = self.module.NAME
-        self.lines.append(line.format(**kwargs))
+        line = line.format(**kwargs)
+        self.qstrdefs += re.findall(r'MP_QSTR_[_a-zA-Z0-9]+', line)
+        self.lines.append(line)
 
     def save(self):
         fn = 'mod{module}.c'.format(module=self.module.name)
         with open(fn, 'w') as f:
-            f.write('\n'.join(self.lines))
-        print('Saved as {fn}'.format(fn=fn))
+            f.write('\n'.join(self.lines) + '\n')
+        print('Saved source as {fn}'.format(fn=fn))
+        fn = 'mod{module}-qstrdefs.h'.format(module=self.module.name) 
+        self.qstrdefs = [ x.replace('MP_QSTR_', 'Q(') + ')' for x in sorted(set(self.qstrdefs)) ]
+        if 'Q(__name__)' in self.qstrdefs:
+            self.qstrdefs.remove('Q(__name__)')
+        with open(fn, 'w') as f:
+            f.write('\n'.join(self.qstrdefs) + '\n')
+        print('Saved qstrdefs as {fn}'.format(fn=fn))
+
 
 
 def generate_function(src, f):

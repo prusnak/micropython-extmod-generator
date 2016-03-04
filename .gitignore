@@ -2,3 +2,4 @@
 *.h
 __pycache__
 !modexample.c
+!modexample-qstrdefs.h
