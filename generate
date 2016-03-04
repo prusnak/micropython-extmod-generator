@@ -113,7 +113,9 @@ class Source(object):
         if 'Q(__name__)' in self.qstrdefs:
             self.qstrdefs.remove('Q(__name__)')
         with open(fn, 'w') as f:
+            f.write('#if MICROPY_PY_{MODULE}\n'.format(MODULE=self.module.NAME))
             f.write('\n'.join(self.qstrdefs) + '\n')
+            f.write('#endif\n')
         print('Saved qstrdefs as {fn}'.format(fn=fn))
 
 
@@ -191,6 +193,9 @@ def generate(module):
     print('Generating source code:')
     src = Source(module)
 
+    src.append('#if MICROPY_PY_{MODULE}')
+    src.append('')
+
     for f in module.functions:
         generate_function(src, f)
 
@@ -216,6 +221,8 @@ def generate(module):
     src.append('    .name = MP_QSTR_{module},')
     src.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,')
     src.append('}};')
+    src.append('')
+    src.append('#endif // MICROPY_PY_{MODULE}')
 
 
     print('Done')

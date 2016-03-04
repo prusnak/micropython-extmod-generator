@@ -32,6 +32,8 @@
 #include "py/runtime.h"
 #include "py/binary.h"
 
+#if MICROPY_PY_EXAMPLE
+
 STATIC mp_obj_t mod_example_func_a(void) {
     // TODO
     return mp_const_none;
@@ -186,3 +188,5 @@ const mp_obj_module_t mp_module_example = {
     .name = MP_QSTR_example,
     .globals = (mp_obj_dict_t*)&mp_module_example_globals,
 };
+
+#endif // MICROPY_PY_EXAMPLE
