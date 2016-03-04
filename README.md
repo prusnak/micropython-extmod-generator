@@ -7,19 +7,20 @@ Usage
 -----
 
 ```
-generate [module]
+extmod-generator [-f] module
 ```
 
-Program will look for file named `module.py` and generate `modmodule.c`.
+Program will look for file named `module/module.py` and generate the following files:
 
-If an argument is not provided, the default `example` will be used.
+* `module/modmodule.c` - external module source code - to be put in `micropython/extmod`
+* `module/qstrdefs.h` - needs to be merged manually with `micropython/py/qstrdefs.h`
 
-Generated file `modmodule-qstrdefs.h` needs to be merged manually with `micropython/py/qstrdefs.h`.
+If a `module` argument is not provided, the default `example` will be used.
 
 Example
 -------
 
-[example.py](example.py) ⇒ [modexample.c](modexample.c) + [modexample-qstrdefs.h](modexample-qstrdefs.h)
+[example/example.py](example/example.py) ⇒ [example/modexample.c](example/modexample.c) + [example/qstrdefs.h](example/qstrdefs.h)
 
 License
 -------

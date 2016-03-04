@@ -66,7 +66,7 @@ class Module(object):
 
     def __init__(self, name):
         print('Looking for module "{name}":'.format(name=name))
-        self.module = importlib.import_module(name)
+        self.module = importlib.import_module('{name}.{name}'.format(name=name))
         print('Found {mod}'.format(mod=self.module))
         self.year = datetime.datetime.now().year
         self.name = name
@@ -101,11 +101,11 @@ class Source(object):
 
     @property
     def csource_filename(self):
-        return 'mod{module}.c'.format(module=self.module.name)
+        return '{module}/mod{module}.c'.format(module=self.module.name)
 
     @property
     def qstrdefs_filename(self):
-        return 'mod{module}-qstrdefs.h'.format(module=self.module.name)
+        return '{module}/qstrdefs.h'.format(module=self.module.name)
 
     def append(self, line, **kwargs):
         kwargs['module'] = self.module.name
