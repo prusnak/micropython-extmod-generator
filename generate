@@ -1,11 +1,14 @@
 #! /usr/bin/env python3
 
+import argparse
 import datetime
 import importlib
-import types
 import inspect
-import sys
 import re
+import sys
+import types
+
+from os.path import exists
 
 import templates
 
@@ -96,6 +99,14 @@ class Source(object):
         self.lines.append(templates.header(year=self.module.year, author=self.module.author))
         self.qstrdefs = []
 
+    @property
+    def csource_filename(self):
+        return 'mod{module}.c'.format(module=self.module.name)
+
+    @property
+    def qstrdefs_filename(self):
+        return 'mod{module}-qstrdefs.h'.format(module=self.module.name)
+
     def append(self, line, **kwargs):
         kwargs['module'] = self.module.name
         kwargs['MODULE'] = self.module.NAME
@@ -104,19 +115,17 @@ class Source(object):
         self.lines.append(line)
 
     def save(self):
-        fn = 'mod{module}.c'.format(module=self.module.name)
-        with open(fn, 'w') as f:
+        with open(self.csource_filename, 'w') as f:
             f.write('\n'.join(self.lines) + '\n')
-        print('Saved source as {fn}'.format(fn=fn))
-        fn = 'mod{module}-qstrdefs.h'.format(module=self.module.name) 
+        print('Saved source as {fn}'.format(fn=self.csource_filename))
         self.qstrdefs = [ x.replace('MP_QSTR_', 'Q(') + ')' for x in sorted(set(self.qstrdefs)) ]
         if 'Q(__name__)' in self.qstrdefs:
             self.qstrdefs.remove('Q(__name__)')
-        with open(fn, 'w') as f:
+        with open(self.qstrdefs_filename, 'w') as f:
             f.write('#if MICROPY_PY_{MODULE}\n'.format(MODULE=self.module.NAME))
             f.write('\n'.join(self.qstrdefs) + '\n')
             f.write('#endif\n')
-        print('Saved qstrdefs as {fn}'.format(fn=fn))
+        print('Saved qstrdefs as {fn}'.format(fn=self.qstrdefs_filename))
 
 
 
@@ -188,7 +197,7 @@ def generate_class(src, c):
     src.append('')
 
 
-def generate(module):
+def generate(module, force=False):
 
     print('Generating source code:')
     src = Source(module)
@@ -224,17 +233,34 @@ def generate(module):
     src.append('')
     src.append('#endif // MICROPY_PY_{MODULE}')
 
-
     print('Done')
-    src.save()
+
+    for fn in (src.csource_filename, src.qstrdefs_filename):
+        if exists(fn) and not force:
+            print("Output file '{}' already exists. "
+                  "Use option -f to overwrite.".format(fn))
+            break
+    else:
+        src.save()
 
 
 def main():
-    if len(sys.argv) > 1:
-        module = Module(sys.argv[1])
-    else:
-        module = Module('example')
-    generate(module)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-f',
+        '--force-overwrite',
+        action="store_true",
+        help="Force overwriting of output file(s) even if they already exist.")
+    parser.add_argument(
+        'module',
+        nargs='?',
+        default='example',
+        help="Name of Python source module.")
+
+    args = parser.parse_args()
+
+    module = Module(args.module)
+    generate(module, args.force_overwrite)
 
 
 if __name__ == "__main__":
