@@ -16,39 +16,70 @@ class Function(object):
 
     def __init__(self, name, argspec, classname=None):
         self.name = name
+        self.classname = classname
         if classname:
             self.fullname = classname + '_' + name
+            self.dotname = classname + '.' + name
         else:
             self.fullname = name
-        self.args = argspec.args
+            self.dotname = name
+        self.argspec = argspec
+        args = argspec.args
 
-        if argspec.varargs is None and argspec.keywords is None and argspec.defaults is None:
-            if len(self.args) >= 0 and len(self.args) <= 3:
-                self.type = str(len(self.args))
+        if argspec.varargs is None and argspec.varkw is None and argspec.defaults is None:
+            if len(args) >= 0 and len(args) <= 3:
+                self.type = str(len(args))
             else:
                 self.type = 'var_between'
-                self.args_min = len(self.args)
-                self.args_max = len(self.args)
+                self.args_min = len(args)
+                self.args_max = len(args)
             return
 
-        if argspec.varargs is None and argspec.keywords is None:
+        if argspec.varargs is None and argspec.varkw is None:
             self.type = 'var_between'
-            self.args_min = len(self.args) - len(argspec.defaults)
-            self.args_max = len(self.args)
+            self.args_min = len(args) - len(argspec.defaults)
+            self.args_max = len(args)
             return
 
-        if argspec.keywords is None and argspec.defaults is None:
+        if argspec.varkw is None and argspec.defaults is None:
             self.type = 'var'
-            self.args_min = len(self.args)
+            self.args_min = len(args)
             return
 
         if argspec.varargs is None and argspec.defaults is None:
             self.type = 'kw'
-            self.args_min = len(self.args)
+            self.args_min = len(args)
             return
 
         raise Exception('Unsupported function type')
 
+    def get_prototype(self):
+        def anot(s):
+            a = self.argspec.annotations[s]
+            if a is None:
+                return 'None'
+            else:
+                return a.__name__
+        args = []
+        for a in self.argspec.args:
+            if a in self.argspec.annotations:
+                args.append(a + ':' + anot(a))
+            else:
+                args.append(a)
+        if self.argspec.defaults:
+            l = len(self.argspec.defaults)
+            for i in range(l):
+                args[-l+i] += '=' + repr(self.argspec.defaults[i])
+        if self.argspec.varargs:
+            args.append('*args')
+        if self.argspec.varkw:
+            args.append('**kwargs')
+        p = 'def {name}({args})'.format(name=self.dotname, args=', '.join(args))
+        if 'return' in self.argspec.annotations:
+            p += ' -> {ret}:'.format(ret=anot('return'))
+        else:
+            p += ':'
+        return p
 
 class Class(object):
 
@@ -77,16 +108,14 @@ class Module(object):
         for n in dir(self.module):
             a = getattr(self.module, n)
             if isinstance(a, types.FunctionType): # function
-                f = Function(n, inspect.getargspec(a))
+                f = Function(n, inspect.getfullargspec(a))
                 self.functions.append(f)
             elif isinstance(a, type): # class
                 c = Class(n)
                 for m in dir(a):
-                    if m == '__init__':
-                        continue
                     b = getattr(a, m)
                     if isinstance(b, types.FunctionType): # method
-                        c.add_method(m, inspect.getargspec(b))
+                        c.add_method(m, inspect.getfullargspec(b))
                 self.classes.append(c)
         print('Parsed OK ... loaded {f} functions and {c} classes with {m} methods'.format(f=len(self.functions), c=len(self.classes), m=sum([ len(c.methods) for c in self.classes ])))
 
@@ -130,14 +159,26 @@ class Source(object):
 
 
 def generate_function(src, f):
+
+    src.append('// ' + f.get_prototype())
+
+    # special case for constructor
+    if f.name == '__init__':
+        src.append('STATIC mp_obj_t mod_{module}_{classname}_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {{', classname=f.classname)
+        src.append('    // TODO')
+        src.append('    return mp_const_none;')
+        src.append('}}')
+        src.append('')
+        return
+
     if f.type == '0':
         src.append('STATIC mp_obj_t mod_{module}_{function}(void) {{', function=f.fullname)
     elif f.type == '1':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}) {{', function=f.fullname, args=f.args)
+        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}) {{', function=f.fullname, args=f.argspec.args)
     elif f.type == '2':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}) {{', function=f.fullname, args=f.args)
+        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}) {{', function=f.fullname, args=f.argspec.args)
     elif f.type == '3':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}, mp_obj_t {args[2]}) {{', function=f.fullname, args=f.args)
+        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}, mp_obj_t {args[2]}) {{', function=f.fullname, args=f.argspec.args)
     elif f.type == 'var':
         src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.fullname)
     elif f.type == 'var_between':
@@ -171,12 +212,6 @@ def generate_function(src, f):
 
 
 def generate_class(src, c):
-
-    src.append('STATIC mp_obj_t mod_{module}_{classname}_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {{', classname=c.name)
-    src.append('    // TODO')
-    src.append('    return mp_const_none;')
-    src.append('}}')
-    src.append('')
 
     for f in c.methods:
         generate_function(src, f)

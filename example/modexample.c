@@ -34,113 +34,132 @@
 
 #if MICROPY_PY_EXAMPLE
 
+// def func_a():
 STATIC mp_obj_t mod_example_func_a(void) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_a_obj, mod_example_func_a);
 
+// def func_b(arg1):
 STATIC mp_obj_t mod_example_func_b(mp_obj_t arg1) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(mod_example_func_b_obj, mod_example_func_b);
 
+// def func_c(arg1, arg2):
 STATIC mp_obj_t mod_example_func_c(mp_obj_t arg1, mp_obj_t arg2) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(mod_example_func_c_obj, mod_example_func_c);
 
+// def func_d(arg1, arg2, arg3):
 STATIC mp_obj_t mod_example_func_d(mp_obj_t arg1, mp_obj_t arg2, mp_obj_t arg3) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_3(mod_example_func_d_obj, mod_example_func_d);
 
+// def func_e(arg1, arg2, arg3, arg4):
 STATIC mp_obj_t mod_example_func_e(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_func_e_obj, 4, 4, mod_example_func_e);
 
+// def func_f(arg1, arg2, arg3, arg4, arg5):
 STATIC mp_obj_t mod_example_func_f(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_func_f_obj, 5, 5, mod_example_func_f);
 
+// def func_g(arg1, arg2, arg3='test', arg4=None):
 STATIC mp_obj_t mod_example_func_g(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_func_g_obj, 2, 4, mod_example_func_g);
 
+// def func_h(arg1, arg2, arg3, *args):
 STATIC mp_obj_t mod_example_func_h(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR(mod_example_func_h_obj, 3, mod_example_func_h);
 
+// def func_i(arg1, arg2, **kwargs):
 STATIC mp_obj_t mod_example_func_i(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mod_example_func_i_obj, 2, mod_example_func_i);
 
+// def Class.__init__(self, arg1, arg2):
 STATIC mp_obj_t mod_example_Class_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 
+// def Class.func_a(self):
 STATIC mp_obj_t mod_example_Class_func_a(mp_obj_t self) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(mod_example_Class_func_a_obj, mod_example_Class_func_a);
 
+// def Class.func_b(self, arg1):
 STATIC mp_obj_t mod_example_Class_func_b(mp_obj_t self, mp_obj_t arg1) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(mod_example_Class_func_b_obj, mod_example_Class_func_b);
 
+// def Class.func_c(self, arg1, arg2):
 STATIC mp_obj_t mod_example_Class_func_c(mp_obj_t self, mp_obj_t arg1, mp_obj_t arg2) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_3(mod_example_Class_func_c_obj, mod_example_Class_func_c);
 
+// def Class.func_d(self, arg1, arg2, arg3):
 STATIC mp_obj_t mod_example_Class_func_d(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Class_func_d_obj, 4, 4, mod_example_Class_func_d);
 
+// def Class.func_e(self, arg1, arg2, arg3, arg4):
 STATIC mp_obj_t mod_example_Class_func_e(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Class_func_e_obj, 5, 5, mod_example_Class_func_e);
 
+// def Class.func_f(self, arg1, arg2, arg3, arg4, arg5):
 STATIC mp_obj_t mod_example_Class_func_f(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Class_func_f_obj, 6, 6, mod_example_Class_func_f);
 
+// def Class.func_g(self, arg1, arg2, arg3=123, arg4=None):
 STATIC mp_obj_t mod_example_Class_func_g(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Class_func_g_obj, 3, 5, mod_example_Class_func_g);
 
+// def Class.func_h(self, arg1, arg2, arg3, *args):
 STATIC mp_obj_t mod_example_Class_func_h(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR(mod_example_Class_func_h_obj, 4, mod_example_Class_func_h);
 
+// def Class.func_i(self, arg1, arg2, **kwargs):
 STATIC mp_obj_t mod_example_Class_func_i(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {
     // TODO
     return mp_const_none;
@@ -148,6 +167,7 @@ STATIC mp_obj_t mod_example_Class_func_i(size_t n_args, const mp_obj_t *args, mp
 MP_DEFINE_CONST_FUN_OBJ_KW(mod_example_Class_func_i_obj, 3, mod_example_Class_func_i);
 
 STATIC const mp_rom_map_elem_t mod_example_Class_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___init__), MP_ROM_PTR(&mod_example_Class___init___obj) },
     { MP_ROM_QSTR(MP_QSTR_func_a), MP_ROM_PTR(&mod_example_Class_func_a_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_b), MP_ROM_PTR(&mod_example_Class_func_b_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_c), MP_ROM_PTR(&mod_example_Class_func_c_obj) },

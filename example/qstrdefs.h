@@ -1,5 +1,6 @@
 #if MICROPY_PY_EXAMPLE
 Q(Class)
+Q(__init__)
 Q(example)
 Q(func_a)
 Q(func_b)
