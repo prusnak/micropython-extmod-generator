@@ -63,7 +63,7 @@ class Function(object):
         args = []
         for a in self.argspec.args:
             if a in self.argspec.annotations:
-                args.append(a + ':' + anot(a))
+                args.append(a + ': ' + anot(a))
             else:
                 args.append(a)
         if self.argspec.defaults:

@@ -16,10 +16,10 @@ def func_d(arg1, arg2, arg3):
 def func_e(arg1, arg2, arg3, arg4):
     pass
 
-def func_f(arg1, arg2, arg3, arg4, arg5):
+def func_f(arg1, arg2: int, arg3, arg4, arg5: int=123):
     pass
 
-def func_g(arg1, arg2, arg3='test', arg4=None):
+def func_g(arg1, arg2, arg3: str='test', arg4=None):
     pass
 
 def func_h(arg1, arg2, arg3, *args):
@@ -49,10 +49,10 @@ class Class(object):
     def func_e(self, arg1, arg2, arg3, arg4):
         pass
 
-    def func_f(self, arg1, arg2, arg3, arg4, arg5):
+    def func_f(self, arg1, arg2: int, arg3, arg4, arg5: int=123):
         pass
 
-    def func_g(self, arg1, arg2, arg3=123, arg4=None):
+    def func_g(self, arg1, arg2, arg3: str='test', arg4=None):
         pass
 
     def func_h(self, arg1, arg2, arg3, *args):
