@@ -167,7 +167,6 @@ STATIC mp_obj_t mod_example_Class_func_i(size_t n_args, const mp_obj_t *args, mp
 MP_DEFINE_CONST_FUN_OBJ_KW(mod_example_Class_func_i_obj, 3, mod_example_Class_func_i);
 
 STATIC const mp_rom_map_elem_t mod_example_Class_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR___init__), MP_ROM_PTR(&mod_example_Class___init___obj) },
     { MP_ROM_QSTR(MP_QSTR_func_a), MP_ROM_PTR(&mod_example_Class_func_a_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_b), MP_ROM_PTR(&mod_example_Class_func_b_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_c), MP_ROM_PTR(&mod_example_Class_func_c_obj) },

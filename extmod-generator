@@ -218,6 +218,8 @@ def generate_class(src, c):
 
     src.append('STATIC const mp_rom_map_elem_t mod_{module}_{classname}_locals_dict_table[] = {{', classname=c.name)
     for f in c.methods:
+        if f.name == '__init__':
+            continue
         src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{classname}_{function}_obj) }},', classname=c.name, function=f.name)
     src.append('}};')
     src.append('STATIC MP_DEFINE_CONST_DICT(mod_{module}_{classname}_locals_dict, mod_{module}_{classname}_locals_dict_table);', classname=c.name)
