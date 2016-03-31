@@ -97,10 +97,16 @@ STATIC mp_obj_t mod_example_func_i(size_t n_args, const mp_obj_t *args, mp_map_t
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mod_example_func_i_obj, 2, mod_example_func_i);
 
+// class Class(object):
+typedef struct _mp_obj_Class_t {
+    mp_obj_base_t base;
+} mp_obj_Class_t;
+
 // def Class.__init__(self, arg1, arg2):
 STATIC mp_obj_t mod_example_Class_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    // TODO
-    return mp_const_none;
+    mp_obj_Class_t *o = m_new_obj(mp_obj_Class_t);
+    o->base.type = type;
+    return MP_OBJ_FROM_PTR(o);
 }
 
 // def Class.func_a(self):
@@ -166,6 +172,8 @@ STATIC mp_obj_t mod_example_Class_func_i(size_t n_args, const mp_obj_t *args, mp
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mod_example_Class_func_i_obj, 3, mod_example_Class_func_i);
 
+// Class stuff
+
 STATIC const mp_rom_map_elem_t mod_example_Class_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_func_a), MP_ROM_PTR(&mod_example_Class_func_a_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_b), MP_ROM_PTR(&mod_example_Class_func_b_obj) },
@@ -185,6 +193,8 @@ STATIC const mp_obj_type_t mod_example_Class_type = {
     .make_new = mod_example_Class_make_new,
     .locals_dict = (void*)&mod_example_Class_locals_dict,
 };
+
+// module stuff
 
 STATIC const mp_rom_map_elem_t mp_module_example_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_example) },

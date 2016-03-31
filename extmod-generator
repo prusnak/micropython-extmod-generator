@@ -165,8 +165,9 @@ def generate_function(src, f):
     # special case for constructor
     if f.name == '__init__':
         src.append('STATIC mp_obj_t mod_{module}_{classname}_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {{', classname=f.classname)
-        src.append('    // TODO')
-        src.append('    return mp_const_none;')
+        src.append('    mp_obj_{classname}_t *o = m_new_obj(mp_obj_{classname}_t);', classname=f.classname)
+        src.append('    o->base.type = type;')
+        src.append('    return MP_OBJ_FROM_PTR(o);')
         src.append('}}')
         src.append('')
         return
@@ -213,8 +214,18 @@ def generate_function(src, f):
 
 def generate_class(src, c):
 
+
+    src.append('// class {classname}(object):', classname=c.name)
+    src.append('typedef struct _mp_obj_{classname}_t {{', classname=c.name)
+    src.append('    mp_obj_base_t base;')
+    src.append('}} mp_obj_{classname}_t;', classname=c.name)
+    src.append('')
+
     for f in c.methods:
         generate_function(src, f)
+
+    src.append('// {classname} stuff', classname=c.name)
+    src.append('')
 
     src.append('STATIC const mp_rom_map_elem_t mod_{module}_{classname}_locals_dict_table[] = {{', classname=c.name)
     for f in c.methods:
@@ -248,6 +259,8 @@ def generate(module, force=False):
     for c in module.classes:
         generate_class(src, c)
 
+    src.append('// module stuff')
+    src.append('')
     src.append('STATIC const mp_rom_map_elem_t mp_module_{module}_globals_table[] = {{')
     src.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},')
 
