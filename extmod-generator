@@ -76,9 +76,7 @@ class Function(object):
             args.append('**kwargs')
         p = 'def {name}({args})'.format(name=self.dotname, args=', '.join(args))
         if 'return' in self.argspec.annotations:
-            p += ' -> {ret}:'.format(ret=anot('return'))
-        else:
-            p += ':'
+            p += ' -> {ret}'.format(ret=anot('return'))
         return p
 
 class Class(object):
