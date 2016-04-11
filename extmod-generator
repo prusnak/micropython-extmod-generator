@@ -192,19 +192,19 @@ def generate_function(src, f):
     src.append('}}')
 
     if f.type == '0':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_0(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
     elif f.type == '1':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
     elif f.type == '2':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_2(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
     elif f.type == '3':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_3(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
     elif f.type == 'var':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_VAR(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.fullname, args_min=f.args_min)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.fullname, args_min=f.args_min)
     elif f.type == 'var_between':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_{module}_{function}_obj, {args_min}, {args_max}, mod_{module}_{function});', function=f.fullname, args_min=f.args_min, args_max=f.args_max)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_{module}_{function}_obj, {args_min}, {args_max}, mod_{module}_{function});', function=f.fullname, args_min=f.args_min, args_max=f.args_max)
     elif f.type == 'kw':
-        src.append('MP_DEFINE_CONST_FUN_OBJ_KW(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.fullname, args_min=f.args_min)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.fullname, args_min=f.args_min)
     else:
         raise Exception('Unknown function type: {type}'.format(type=f.type))
     src.append('')
@@ -268,8 +268,6 @@ def generate(module, force=False):
         src.append('    {{ MP_ROM_QSTR(MP_QSTR_{classname}), MP_ROM_PTR(&mod_{module}_{classname}_type) }},', classname=c.name)
 
     src.append('}};')
-    src.append('')
-
     src.append('STATIC MP_DEFINE_CONST_DICT(mp_module_{module}_globals, mp_module_{module}_globals_table);')
     src.append('')
 
