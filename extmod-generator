@@ -163,6 +163,20 @@ def generate_function(src, f):
     # special case for constructor
     if f.name == '__init__':
         src.append('STATIC mp_obj_t mod_{module}_{classname}_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {{', classname=f.classname)
+        if f.type == '0':
+            pass # should not happen
+        elif f.type == '1':
+            src.append('    mp_arg_check_num(n_args, n_kw, 0, 0, false);')
+        elif f.type == '2':
+            src.append('    mp_arg_check_num(n_args, n_kw, 1, 1, false);')
+        elif f.type == '3':
+            src.append('    mp_arg_check_num(n_args, n_kw, 2, 2, false);')
+        elif f.type == 'var':
+            src.append('    mp_arg_check_num(n_args, n_kw, {args_min}, 999, false);', args_min=f.args_min - 1)
+        elif f.type == 'var_between':
+            src.append('    mp_arg_check_num(n_args, n_kw, {args_min}, {args_max}, false);', args_min=f.args_min - 1, args_max=f.args_max - 1)
+        elif f.type == 'kw':
+            src.append('    mp_arg_check_num(n_args, n_kw, {args_min}, 999, true);', args_min=f.args_min - 1)
         src.append('    mp_obj_{classname}_t *o = m_new_obj(mp_obj_{classname}_t);', classname=f.classname)
         src.append('    o->base.type = type;')
         src.append('    return MP_OBJ_FROM_PTR(o);')
