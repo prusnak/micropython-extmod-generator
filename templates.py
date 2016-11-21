@@ -25,11 +25,4 @@ def header(**kwargs):
  * THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <assert.h>
-#include <string.h>
-
-#include "py/nlr.h"
-#include "py/runtime.h"
-#include "py/binary.h"
 '''.format(**kwargs)

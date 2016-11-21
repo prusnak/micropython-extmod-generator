@@ -24,14 +24,6 @@
  * THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <assert.h>
-#include <string.h>
-
-#include "py/nlr.h"
-#include "py/runtime.h"
-#include "py/binary.h"
-
 #if MICROPY_PY_EXAMPLE
 
 // def func_a()
