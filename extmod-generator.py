@@ -11,6 +11,7 @@ import types
 
 import templates
 
+SIMPLE_TYPES = (int, float, bool, str) # tuple, list, dict
 
 class Function(object):
 
@@ -84,6 +85,8 @@ class Class(object):
     def __init__(self, name):
         self.name = name
         self.methods = []
+        self.defines = []
+        self.vars = []
 
     def add_method(self, name, argspec):
         m = Function(name, argspec, classname=self.name)
@@ -93,27 +96,58 @@ class Class(object):
 class Module(object):
 
     def __init__(self, name):
+        importlib.invalidate_caches()
         print('Looking for module "{name}":'.format(name=name))
+        try:
         self.module = importlib.import_module('{name}.{name}'.format(name=name))
+        except:    
+            self.module = importlib.import_module('{name}'.format(name=name))
         self.path = os.path.split(self.module.__file__)[0]
         print('Found {mod}'.format(mod=self.module))
         self.year = datetime.datetime.now().year
         self.name = name
         self.NAME = name.upper()
+        try:
         self.author = self.module.__author__
+        except:
+            self.author = ''
         self.functions = []
         self.classes = []
+        self.defines = []
+        self.vars = []
         for n in dir(self.module):
             a = getattr(self.module, n)
             if isinstance(a, types.FunctionType): # function
                 f = Function(n, inspect.getfullargspec(a))
                 self.functions.append(f)
+            elif isinstance(a, SIMPLE_TYPES):
+                if n == n.upper():
+                    self.defines.append((n, a))
+                elif type(a) is str:
+                    if n[0:2] == '__' and n[-2:] == '__':
+                        # '__file__', '__name__', '__package__' etc
+                        pass
+                    else:    
+                        self.vars.append((n, a))
+                else:    
+                    self.vars.append((n, a))
             elif isinstance(a, type): # class
                 c = Class(n)
                 for m in dir(a):
                     b = getattr(a, m)
                     if isinstance(b, types.FunctionType): # method
                         c.add_method(m, inspect.getfullargspec(b))
+                    elif isinstance(b, SIMPLE_TYPES):
+                        if m == m.upper():
+                            c.defines.append((m, b))
+                        elif type(b) is str:
+                            if m[0:2] == '__' and m[-2:] == '__':
+                                # '__file__', '__name__', '__package__' etc
+                                pass
+                            else:    
+                                c.vars.append((m, b))
+                        else:    
+                            c.vars.append((m, b))
                 self.classes.append(c)
         print('Parsed OK ... loaded {f} functions and {c} classes with {m} methods'.format(f=len(self.functions), c=len(self.classes), m=sum([ len(c.methods) for c in self.classes ])))
 
@@ -154,7 +188,35 @@ class Source(object):
             f.write('#endif\n')
         print('Saved qstrdefs as {fn}'.format(fn=self.qstrdefs_filename))
 
+python_type_to_c_type = {
+    int: "int",
+    float: "float",
+    bool: "bool",
+    str: "char*",
+    tuple: "???",
+    list: "???",
+    dict: "???",
+    set: "???",
+    # tuple: string_template(
+    #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
+    # list: string_template(
+    #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
+    # set: string_template(
+    #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
+    None: "NULL"
+}
 
+def generate_define(src, v):
+    if type(v[1]) is str:
+        src.append('#define ' + v[0] + '\t' + '( "' + v[1] + '" )')
+    else:
+        src.append('#define ' + v[0] + '\t' + '( ' + str(v[1]) + ' )')
+
+def generate_var(src, v):
+    if type(v[1]) is str:
+        src.append('static ' + python_type_to_c_type[type(v[1])] + ' ' + v[0] + '\t= ' + '"' + v[1] + '"')
+    else:
+        src.append('static ' + python_type_to_c_type[type(v[1])] + ' ' + v[0] + '\t= ' + str(v[1]))
 
 def generate_function(src, f):
 
@@ -264,6 +326,16 @@ def generate(module, force=False):
 
     src.append('#if MICROPY_PY_{MODULE}')
     src.append('')
+
+    for v in module.defines:
+        generate_define(src, v)
+    if len(module.defines) > 0:
+        src.append('')
+
+    for v in module.vars:
+        generate_var(src, v)
+    if len(module.vars) > 0:
+        src.append('')
 
     for f in module.functions:
         generate_function(src, f)
