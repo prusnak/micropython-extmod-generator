@@ -99,7 +99,7 @@ class Module(object):
         importlib.invalidate_caches()
         print('Looking for module "{name}":'.format(name=name))
         try:
-        self.module = importlib.import_module('{name}.{name}'.format(name=name))
+            self.module = importlib.import_module('{name}.{name}'.format(name=name))
         except:    
             self.module = importlib.import_module('{name}'.format(name=name))
         self.path = os.path.split(self.module.__file__)[0]
@@ -108,7 +108,7 @@ class Module(object):
         self.name = name
         self.NAME = name.upper()
         try:
-        self.author = self.module.__author__
+            self.author = self.module.__author__
         except:
             self.author = ''
         self.functions = []

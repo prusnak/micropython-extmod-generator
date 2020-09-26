@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 Module Author
+ * Copyright (c) 2020 Module Author
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,20 @@
  * THE SOFTWARE.
  */
 
+
 #if MICROPY_PY_EXAMPLE
+
+#define CONST1	( 11 )
+#define CONST2	( 4.840000000000001 )
+#define CONST3	( "333444" )
+#define ONE_SHOT	( False )
+#define PERIODIC	( True )
+
+static int var1	= 4
+static float var2	= 2.2
+static char* var3	= "333"
+static bool var4	= False
+static bool var5	= True
 
 // def func_a()
 STATIC mp_obj_t mod_example_func_a(void) {
@@ -33,28 +46,28 @@ STATIC mp_obj_t mod_example_func_a(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_a_obj, mod_example_func_a);
 
-// def func_b(arg1)
+// def func_b(arg1: int) -> None
 STATIC mp_obj_t mod_example_func_b(mp_obj_t arg1) {
     // TODO
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_example_func_b_obj, mod_example_func_b);
 
-// def func_c(arg1, arg2) -> None
+// def func_c(arg1: int, arg2: int) -> int
 STATIC mp_obj_t mod_example_func_c(mp_obj_t arg1, mp_obj_t arg2) {
     // TODO
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_example_func_c_obj, mod_example_func_c);
 
-// def func_d(arg1, arg2, arg3) -> int
+// def func_d(arg1: bool, arg2: str, arg3: tuple) -> int
 STATIC mp_obj_t mod_example_func_d(mp_obj_t arg1, mp_obj_t arg2, mp_obj_t arg3) {
     // TODO
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_example_func_d_obj, mod_example_func_d);
 
-// def func_e(arg1, arg2, arg3, arg4) -> str
+// def func_e(arg1: list, arg2: dict, arg3, arg4) -> str
 STATIC mp_obj_t mod_example_func_e(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
@@ -68,31 +81,94 @@ STATIC mp_obj_t mod_example_func_f(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_func_f_obj, 4, 5, mod_example_func_f);
 
-// def func_g(arg1, arg2, arg3: str='test', arg4=None)
+// def func_g(arg1, arg2, arg3: str='test', arg4=None) -> float
 STATIC mp_obj_t mod_example_func_g(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_func_g_obj, 2, 4, mod_example_func_g);
 
-// def func_h(arg1, arg2, arg3, *args)
+// def func_h(arg1, arg2, arg3, *args) -> bool
 STATIC mp_obj_t mod_example_func_h(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(mod_example_func_h_obj, 3, mod_example_func_h);
 
-// def func_i(arg1, arg2, **kwargs)
+// def func_i(arg1, arg2, **kwargs) -> list
 STATIC mp_obj_t mod_example_func_i(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {
     // TODO
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_example_func_i_obj, 2, mod_example_func_i);
 
+// def func_j() -> dict
+STATIC mp_obj_t mod_example_func_j(void) {
+    // TODO
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_j_obj, mod_example_func_j);
+
+// def func_k() -> tuple
+STATIC mp_obj_t mod_example_func_k(void) {
+    // TODO
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_k_obj, mod_example_func_k);
+
+// def func_l() -> complex
+STATIC mp_obj_t mod_example_func_l(void) {
+    // TODO
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_l_obj, mod_example_func_l);
+
+// def func_m() -> range
+STATIC mp_obj_t mod_example_func_m(void) {
+    // TODO
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_m_obj, mod_example_func_m);
+
+// def func_n() -> bytearray
+STATIC mp_obj_t mod_example_func_n(void) {
+    // TODO
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_n_obj, mod_example_func_n);
+
+// def func_o() -> memoryview
+STATIC mp_obj_t mod_example_func_o(void) {
+    // TODO
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_o_obj, mod_example_func_o);
+
+// def func_p() -> set
+STATIC mp_obj_t mod_example_func_p(void) {
+    // TODO
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_p_obj, mod_example_func_p);
+
+// def func_q() -> frozenset
+STATIC mp_obj_t mod_example_func_q(void) {
+    // TODO
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_q_obj, mod_example_func_q);
+
 // class Class(object):
 typedef struct _mp_obj_Class_t {
     mp_obj_base_t base;
 } mp_obj_Class_t;
+
+// def Class.__del__(self)
+STATIC mp_obj_t mod_example_Class___del__(mp_obj_t self) {
+    // TODO
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_example_Class___del___obj, mod_example_Class___del__);
 
 // def Class.__init__(self, arg1, arg2)
 STATIC mp_obj_t mod_example_Class_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
@@ -144,7 +220,7 @@ STATIC mp_obj_t mod_example_Class_func_f(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_example_Class_func_f_obj, 5, 6, mod_example_Class_func_f);
 
-// def Class.func_g(self, arg1, arg2, arg3: str='test', arg4=None)
+// def Class.func_g(self, arg1, arg2, arg3: str='test', arg4=None) -> dict
 STATIC mp_obj_t mod_example_Class_func_g(size_t n_args, const mp_obj_t *args) {
     // TODO
     return mp_const_none;
@@ -168,6 +244,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_example_Class_func_i_obj, 3, mod_example_C
 // Class stuff
 
 STATIC const mp_rom_map_elem_t mod_example_Class_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_example_Class___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_func_a), MP_ROM_PTR(&mod_example_Class_func_a_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_b), MP_ROM_PTR(&mod_example_Class_func_b_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_c), MP_ROM_PTR(&mod_example_Class_func_c_obj) },
@@ -187,6 +264,24 @@ STATIC const mp_obj_type_t mod_example_Class_type = {
     .locals_dict = (void*)&mod_example_Class_locals_dict,
 };
 
+// class Priority(object):
+typedef struct _mp_obj_Priority_t {
+    mp_obj_base_t base;
+} mp_obj_Priority_t;
+
+// Priority stuff
+
+STATIC const mp_rom_map_elem_t mod_example_Priority_locals_dict_table[] = {
+};
+STATIC MP_DEFINE_CONST_DICT(mod_example_Priority_locals_dict, mod_example_Priority_locals_dict_table);
+
+STATIC const mp_obj_type_t mod_example_Priority_type = {
+    { &mp_type_type },
+    .name = MP_QSTR_Priority,
+    .make_new = mod_example_Priority_make_new,
+    .locals_dict = (void*)&mod_example_Priority_locals_dict,
+};
+
 // module stuff
 
 STATIC const mp_rom_map_elem_t mp_module_example_globals_table[] = {
@@ -200,7 +295,16 @@ STATIC const mp_rom_map_elem_t mp_module_example_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_func_g), MP_ROM_PTR(&mod_example_func_g_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_h), MP_ROM_PTR(&mod_example_func_h_obj) },
     { MP_ROM_QSTR(MP_QSTR_func_i), MP_ROM_PTR(&mod_example_func_i_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_j), MP_ROM_PTR(&mod_example_func_j_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_k), MP_ROM_PTR(&mod_example_func_k_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_l), MP_ROM_PTR(&mod_example_func_l_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_m), MP_ROM_PTR(&mod_example_func_m_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_n), MP_ROM_PTR(&mod_example_func_n_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_o), MP_ROM_PTR(&mod_example_func_o_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_p), MP_ROM_PTR(&mod_example_func_p_obj) },
+    { MP_ROM_QSTR(MP_QSTR_func_q), MP_ROM_PTR(&mod_example_func_q_obj) },
     { MP_ROM_QSTR(MP_QSTR_Class), MP_ROM_PTR(&mod_example_Class_type) },
+    { MP_ROM_QSTR(MP_QSTR_Priority), MP_ROM_PTR(&mod_example_Priority_type) },
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_example_globals, mp_module_example_globals_table);
 
