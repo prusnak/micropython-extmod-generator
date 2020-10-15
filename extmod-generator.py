@@ -123,33 +123,25 @@ class Module(object):
                 f = Function(n, inspect.getfullargspec(a))
                 self.functions.append(f)
             elif isinstance(a, CONSTANT_TYPES):
-                if n == n.upper():
-                    self.defines.append((n, a))
-                elif type(a) is str:
-                    if n[0:2] == '__' and n[-2:] == '__':
-                        # '__file__', '__name__', '__package__' etc
-                        pass
-                    else:    
-                        self.vars.append((n, a))
-                else:    
-                    self.vars.append((n, a))
-            elif isinstance(a, type): # class
+                if (n[0:2] == '__') and (n[-2:] == '__'):  # and (n == n.lower())
+                    pass  # '__file__', '__name__', '__package__' etc
+                elif n == n.upper():
+                    self.defines.append(Value(n, a))
+                else:
+                    self.vars.append(Value(n, a))
+            elif isinstance(a, type):  # class
                 c = Class(n)
                 for m in dir(a):
                     b = getattr(a, m)
                     if isinstance(b, types.FunctionType):  # method
                         c.add_method(m, inspect.getfullargspec(b))
                     elif isinstance(b, CONSTANT_TYPES):
-                        if m == m.upper():
-                            c.defines.append((m, b))
-                        elif type(b) is str:
-                            if m[0:2] == '__' and m[-2:] == '__':
-                                # '__file__', '__name__', '__package__' etc
-                                pass
-                            else:    
-                                c.vars.append((m, b))
-                        else:    
-                            c.vars.append((m, b))
+                        if (m[0:2] == '__') and (m[-2:] == '__'):  # and (m == m.lower())
+                            pass
+                        elif m == m.upper():
+                            c.defines.append(Value(m, b, classname=c.name))
+                        else:
+                            c.vars.append(Value(m, b, classname=c.name))
                 self.classes.append(c)
         print('Parsed OK ... loaded {f} functions and {c} classes with {m} methods'.format(f=len(self.functions), c=len(self.classes), m=sum([len(c.methods) for c in self.classes])))
 
