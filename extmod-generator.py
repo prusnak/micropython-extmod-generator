@@ -13,7 +13,7 @@ import templates
 
 IS_EXTERNAL_MODULE = True # set False if core port module
 
-SIMPLE_TYPES = (int, float, bool, str) # tuple, list, dict
+CONSTANT_TYPES = (type(None), int, bool, float, str, tuple)
 
 class Function(object):
 
@@ -122,7 +122,7 @@ class Module(object):
             if isinstance(a, types.FunctionType):  # function
                 f = Function(n, inspect.getfullargspec(a))
                 self.functions.append(f)
-            elif isinstance(a, SIMPLE_TYPES):
+            elif isinstance(a, CONSTANT_TYPES):
                 if n == n.upper():
                     self.defines.append((n, a))
                 elif type(a) is str:
@@ -139,7 +139,7 @@ class Module(object):
                     b = getattr(a, m)
                     if isinstance(b, types.FunctionType):  # method
                         c.add_method(m, inspect.getfullargspec(b))
-                    elif isinstance(b, SIMPLE_TYPES):
+                    elif isinstance(b, CONSTANT_TYPES):
                         if m == m.upper():
                             c.defines.append((m, b))
                         elif type(b) is str:
