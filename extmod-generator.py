@@ -33,8 +33,9 @@ class Value(GenericName):
 
 
 class Function(GenericName):
-    def __init__(self, name, argspec, classname=None):
+    def __init__(self, name, func, argspec, classname=None):
         super().__init__(name, classname)
+        self.func = func    
         if classname:
             self.dotname = classname + '.' + name
         else:
@@ -104,8 +105,8 @@ class Class(object):
         self.defines = []
         self.vars = []
 
-    def add_method(self, name, argspec):
-        m = Function(name, argspec, classname=self.name)
+    def add_method(self, name, func, argspec):
+        m = Function(name, func, argspec, classname=self.name)
         self.methods.append(m)
 
 
@@ -133,7 +134,7 @@ class Module(object):
         for n in dir(self.module):
             a = getattr(self.module, n)
             if isinstance(a, types.FunctionType):  # function
-                f = Function(n, inspect.getfullargspec(a))
+                f = Function(n, a, inspect.getfullargspec(a))
                 self.functions.append(f)
             elif isinstance(a, CONSTANT_TYPES):
                 if (n[0:2] == '__') and (n[-2:] == '__'):  # and (n == n.lower())
@@ -147,7 +148,7 @@ class Module(object):
                 for m in dir(a):
                     b = getattr(a, m)
                     if isinstance(b, types.FunctionType):  # method
-                        c.add_method(m, inspect.getfullargspec(b))
+                        c.add_method(m, b, inspect.getfullargspec(b))
                     elif isinstance(b, CONSTANT_TYPES):
                         if (m[0:2] == '__') and (m[-2:] == '__'):  # and (m == m.lower())
                             pass
@@ -339,8 +340,30 @@ def generate_var(src, v):
         src.append('static ' + python_type_to_c_type[type(v.value)] + ' ' + v.fullname + '\t= ' + str(v.value) + ';')
 
 
+def format_comment(doc):
+    lines = doc.splitlines()
+    while lines[len(lines)-1].strip() == '':  # delete the last empty lines
+        lines.pop(len(lines)-1)
+    while len(lines[0].strip()) == 0:  # delete leading empty lines
+        lines.pop(0)
+    for i in range(len(lines)):  # truncate spaces lines
+        if len(lines[i].strip()) == 0:
+            lines[i] = ''
+    n = 99999
+    for i in range(len(lines)):  # calculate length of leading spaces for remove
+        s = lines[i].lstrip()
+        if len(s) != 0:
+            n = min(n, len(lines[i]) - len(s))
+    for i in range(len(lines)):  # remove leading spaces
+        lines[i] = lines[i][n:]
+    return ''.join(['\n' + line for line in lines])+'\n'
+
+
 def generate_function(src, f):
     src.append('// ' + f.get_prototype())
+
+    if f.func.__doc__ is not None:
+        src.append('/*' + format_comment(f.func.__doc__) + '*/')
 
     # special case for constructor
     if f.name == '__init__':
@@ -456,6 +479,10 @@ def generate(module, force=False):
     print('Generating source code:')
     src = Source(module)
 
+    if module.module.__doc__ is not None:
+        print(module.module.__doc__)
+        src.append('/*' + format_comment(module.module.__doc__) + '*/\n')
+        
     if IS_EXTERNAL_MODULE:
         src.append('#define MODULE_{MODULE}_ENABLED (1) // you may copy this line to the mpconfigport.h')
         src.append('#if MODULE_{MODULE}_ENABLED')
