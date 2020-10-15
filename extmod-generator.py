@@ -167,9 +167,15 @@ class Source(object):
     def append(self, line, **kwargs):
         kwargs['module'] = self.module.name
         kwargs['MODULE'] = self.module.NAME
-        line = line.format(**kwargs)
-        self.qstrdefs += re.findall(r'MP_QSTR_[_a-zA-Z0-9]+', line)
-        self.lines.append(line)
+        try:
+            #print('line>>>', line, '<<<line')
+            line = line.format(**kwargs)
+            self.qstrdefs += re.findall(r'MP_QSTR_[_a-zA-Z0-9]+', line)
+            self.lines.append(line)
+        except (KeyError, ValueError) as e:
+            #print('line>>>', line, '<<<line')
+            #print(e)
+            self.lines.append(line)
 
     def save(self):
         with open(self.csource_filename, 'w') as f:
