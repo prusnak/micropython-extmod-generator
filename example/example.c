@@ -25,7 +25,24 @@
  */
 
 
-#if MICROPY_PY_EXAMPLE
+#define MODULE_EXAMPLE_ENABLED (1) // you may copy this line to the mpconfigport.h
+#if MODULE_EXAMPLE_ENABLED
+
+// Include required definitions first.
+#include "py/obj.h"
+#include "py/objstr.h"
+#include "py/objtuple.h"
+#include "py/runtime.h"
+#include "py/builtin.h"
+
+#include "objfloat.h"
+
+    /*
+    // Example exception for any generated function
+    if (some_val == 0) {
+        mp_raise_ValueError("'some_val' can't be zero!");
+    }
+    */
 
 // Module constants declarations
 STATIC const mp_int_t CONST1 = 11;
@@ -309,5 +326,7 @@ const mp_obj_module_t mod_example_cmodule = {
     //.name = MP_QSTR_example, // absent
     .globals = (mp_obj_dict_t*)&mod_example_globals,
 };
+// Register the module
+MP_REGISTER_MODULE(MP_QSTR_example, mod_example_cmodule, MODULE_EXAMPLE_ENABLED);
 
-#endif // MICROPY_PY_EXAMPLE
+#endif // MODULE_EXAMPLE_ENABLED

@@ -1,6 +1,10 @@
-#if MICROPY_PY_EXAMPLE
+#if MODULE_EXAMPLE_ENABLED
+Q(CONST1)
+Q(CONST2)
+Q(CONST3)
 Q(Class)
-Q(Priority)
+Q(ONE_SHOT)
+Q(PERIODIC)
 Q(__del__)
 Q(example)
 Q(func_a)

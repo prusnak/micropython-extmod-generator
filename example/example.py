@@ -5,22 +5,13 @@ This is a module help.  Put it into genarated C code.
 __author__ = 'Module Author'
 
 
-# These UPPERCASE variables are treated as #define in C code like
-#define CONST1 ( 11 )
+# These UPPERCASE variables are treated as constants in C code
 CONST1 = 1 + 10 
 CONST2 = 2.2 * 2.2
 CONST3 = "333" + '444'
 ONE_SHOT = False
 PERIODIC = True
 
-
-# These not UPPERCASES variables are treated as static module variables in C code like
-# ststic int var1 = 4;
-var1 = 1 + 3
-var2 = 2.2
-var3 = "333"
-var4 = False
-var5 = True
 
 # We need types to generate proper variable declarations and function result in C code
 def func_a():
@@ -76,31 +67,13 @@ def func_q() -> frozenset:
     pass
 
 
-class Priority:
-    """
-    This class should translate to C code as enum.
-    """
-    EXCEPTIONAL = 0
-    IMMEDIATE   = 1
-    FAST        = 2
-    HIGH        = 3
-    NOMINAL     = 4
-    LOW         = 5
-    SLOW        = 6
-    OPTIONAL    = 7
-
-
 class Class(object):
     '''
-    Class variables are supported
+    Class constants are supported
     '''
     CONST1 = 1
     CONST2 = 2.2
     CONST3 = "333"
-
-    var1 = 1
-    var2 = 2.2
-    var3 = "333"
 
     ONE_SHOT = False
     PERIODIC = True
