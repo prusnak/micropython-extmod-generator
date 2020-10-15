@@ -6,7 +6,7 @@ import importlib
 import inspect
 import os
 import re
-import sys
+#import sys
 import types
 
 import templates
@@ -63,6 +63,7 @@ class Function(object):
                 return 'None'
             else:
                 return a.__name__
+
         args = []
         for a in self.argspec.args:
             if a in self.argspec.annotations:
@@ -72,7 +73,7 @@ class Function(object):
         if self.argspec.defaults:
             l = len(self.argspec.defaults)
             for i in range(l):
-                args[-l+i] += '=' + repr(self.argspec.defaults[i])
+                args[-l + i] += '=' + repr(self.argspec.defaults[i])
         if self.argspec.varargs:
             args.append('*args')
         if self.argspec.varkw:
@@ -82,8 +83,8 @@ class Function(object):
             p += ' -> {ret}'.format(ret=anot('return'))
         return p
 
-class Class(object):
 
+class Class(object):
     def __init__(self, name):
         self.name = name
         self.methods = []
@@ -96,13 +97,12 @@ class Class(object):
 
 
 class Module(object):
-
     def __init__(self, name):
         importlib.invalidate_caches()
         print('Looking for module "{name}":'.format(name=name))
         try:
             self.module = importlib.import_module('{name}.{name}'.format(name=name))
-        except:    
+        except:
             self.module = importlib.import_module('{name}'.format(name=name))
         self.path = os.path.split(self.module.__file__)[0]
         print('Found {mod}'.format(mod=self.module))
@@ -119,7 +119,7 @@ class Module(object):
         self.vars = []
         for n in dir(self.module):
             a = getattr(self.module, n)
-            if isinstance(a, types.FunctionType): # function
+            if isinstance(a, types.FunctionType):  # function
                 f = Function(n, inspect.getfullargspec(a))
                 self.functions.append(f)
             elif isinstance(a, SIMPLE_TYPES):
@@ -137,7 +137,7 @@ class Module(object):
                 c = Class(n)
                 for m in dir(a):
                     b = getattr(a, m)
-                    if isinstance(b, types.FunctionType): # method
+                    if isinstance(b, types.FunctionType):  # method
                         c.add_method(m, inspect.getfullargspec(b))
                     elif isinstance(b, SIMPLE_TYPES):
                         if m == m.upper():
@@ -151,11 +151,10 @@ class Module(object):
                         else:    
                             c.vars.append((m, b))
                 self.classes.append(c)
-        print('Parsed OK ... loaded {f} functions and {c} classes with {m} methods'.format(f=len(self.functions), c=len(self.classes), m=sum([ len(c.methods) for c in self.classes ])))
+        print('Parsed OK ... loaded {f} functions and {c} classes with {m} methods'.format(f=len(self.functions), c=len(self.classes), m=sum([len(c.methods) for c in self.classes])))
 
 
 class Source(object):
-
     def __init__(self, module):
         self.module = module
         self.lines = []
@@ -184,7 +183,7 @@ class Source(object):
         with open(self.csource_filename, 'w') as f:
             f.write('\n'.join(self.lines) + '\n')
         print('Saved source as {fn}'.format(fn=self.csource_filename))
-        self.qstrdefs = [ x.replace('MP_QSTR_', 'Q(') + ')' for x in sorted(set(self.qstrdefs)) ]
+        self.qstrdefs = [x.replace('MP_QSTR_', 'Q(') + ')' for x in sorted(set(self.qstrdefs))]
         if 'Q(__name__)' in self.qstrdefs:
             self.qstrdefs.remove('Q(__name__)')
         with open(self.qstrdefs_filename, 'w') as f:
@@ -195,6 +194,7 @@ class Source(object):
             f.write('\n'.join(self.qstrdefs) + '\n')
             f.write('#endif\n')
         print('Saved qstrdefs as {fn}'.format(fn=self.qstrdefs_filename))
+
 
 python_type_to_c_type = {
     int: "int",
@@ -212,7 +212,7 @@ python_type_to_c_type = {
     # set: string_template(
     #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
     None: "NULL"
-}
+    }
 
 
 def headers():
@@ -252,7 +252,7 @@ def generate_function(src, f):
     if f.name == '__init__':
         src.append('STATIC mp_obj_t mod_{module}_{classname}_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {{', classname=f.classname)
         if f.type == '0':
-            pass # should not happen
+            pass  # should not happen
         elif f.type == '1':
             src.append('    mp_arg_check_num(n_args, n_kw, 0, 0, false);')
         elif f.type == '2':
@@ -313,8 +313,6 @@ def generate_function(src, f):
 
 
 def generate_class(src, c):
-
-
     src.append('// class {classname}(object):', classname=c.name)
     src.append('typedef struct _mp_obj_{classname}_t {{', classname=c.name)
     src.append('    mp_obj_base_t base;')
@@ -346,7 +344,6 @@ def generate_class(src, c):
 
 
 def generate(module, force=False):
-
     print('Generating source code:')
     src = Source(module)
 
