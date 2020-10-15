@@ -15,16 +15,29 @@ IS_EXTERNAL_MODULE = True # set False if core port module
 
 CONSTANT_TYPES = (type(None), int, bool, float, str, tuple)
 
-class Function(object):
 
-    def __init__(self, name, argspec, classname=None):
+class GenericName(object):
+    def __init__(self, name, classname=None):
         self.name = name
         self.classname = classname
         if classname:
             self.fullname = classname + '_' + name
-            self.dotname = classname + '.' + name
         else:
             self.fullname = name
+
+
+class Value(GenericName):
+    def __init__(self, name, value, classname=None):
+        super().__init__(name, classname)
+        self.value = value
+
+
+class Function(GenericName):
+    def __init__(self, name, argspec, classname=None):
+        super().__init__(name, classname)
+        if classname:
+            self.dotname = classname + '.' + name
+        else:
             self.dotname = name
         self.argspec = argspec
         args = argspec.args
@@ -230,20 +243,103 @@ def headers():
     }
     */'''
 
-def generate_define(src, v):
-    if type(v[1]) is str:
-        src.append('#define ' + v[0] + '\t' + '( "' + v[1] + '" )')
+
+USE_DEFINE = False
+
+
+def generate_define(src, d, level, indx):
+    if d.value is None:
+        if USE_DEFINE:
+            src.append('#define {name}\t (MP_ROM_NONE)', name=d.fullname)
+        else:
+            src.append('STATIC const void *{name} = MP_ROM_NONE;', name=d.fullname)
+    elif type(d.value) is bool:
+        if USE_DEFINE:
+            src.append('#define ' + d.fullname + '\t ' + '(' + ('MP_ROM_TRUE' if d.value else 'MP_ROM_FALSE') + ')')
+        else:
+            src.append('STATIC const bool *{name} = {value};', name=d.fullname, value='MP_ROM_TRUE' if d.value else 'MP_ROM_FALSE')
+    elif type(d.value) is int:
+        if USE_DEFINE:
+            src.append('#define ' + d.fullname + '\t ' + '(' + str(d.value) + ')')
+        else:
+            src.append('STATIC const mp_int_t {name} = {value};', name=d.fullname, value=d.value)
+    elif type(d.value) is str:
+        src.append('STATIC const MP_DEFINE_STR_OBJ({name}_str_obj, "{value}");', name=d.fullname, value=d.value)
+    elif type(d.value) is float:
+        src.append('STATIC const MP_DEFINE_FLOAT_OBJ({name}_float_obj, {value});', name=d.fullname, value=d.value)
+    elif type(d.value) is tuple:
+        generate_define_tuple(src, d.fullname, level, indx, d.value)
     else:
-        src.append('#define ' + v[0] + '\t' + '( ' + str(v[1]) + ' )')
+        print('generate_define', d.value, type(d.value))
+        raise TypeError
+
+
+def generate_define_tuple(src, name, level, indx, d):
+    if len(src.lines[-1]) != 0:
+        src.append('')
+
+    for i, e in enumerate(d):
+        if type(e) is tuple:
+            generate_define_tuple(src, name, level + 1, i, e)
+
+    for i, e in enumerate(d):
+        if type(e) is str:
+            src.append('STATIC const MP_DEFINE_STR_OBJ({name}_{level}_{i}_str_obj, "{value}");', name=name, level=level, i=i, value=e)
+        elif type(e) is float:
+            src.append('STATIC const MP_DEFINE_FLOAT_OBJ({name}_{level}_{i}_float_obj, {value});', name=name, level=level, i=i, value=e)
+
+    src.append('const mp_rom_obj_tuple_t %s_%d_%d_tuple_obj = {{&mp_type_tuple}, %d, {' % (name, level, indx, len(d)))
+
+    for i, e in enumerate(d):
+        if e is None:
+            src.append('    MP_ROM_NONE,')
+        elif type(e) is bool:
+            src.append('    ' + ('MP_ROM_TRUE' if e else 'MP_ROM_FALSE') + ',')
+        elif type(e) is int:
+            src.append('    MP_ROM_INT({value}),', value=e)
+        elif type(e) is str:
+            src.append('    MP_ROM_PTR(&{name}_{level}_{i}_str_obj),', name=name, level=level, i=i)
+        elif type(e) is tuple:
+            src.append('    MP_ROM_PTR(&{name}_{level}_{i}_tuple_obj),', name=name, level=level + 1, i=i)
+        elif type(e) is float:
+            src.append('    MP_ROM_PTR(&{name}_{level}_{i}_float_obj),', name=name, level=level, i=i)
+        else:
+            raise TypeError
+
+    src.append('},};')  # end of tuple
+
+    if level == 0:
+        src.append('')
+
+
+def register_defines(src, defines):
+    for i, d in enumerate(defines):
+        if d.value is None:
+            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_NONE }},', name=d.name)
+        elif type(d.value) is bool:
+            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), ' + ('MP_ROM_TRUE' if d.value else 'MP_ROM_FALSE') + ' }},', name=d.name)
+        elif type(d.value) is int:
+            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({value}) }},', name=d.name, value=d.value)
+        elif type(d.value) is str:
+            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_str_obj) }},', name=d.name, fullname=d.fullname, value=d.value)
+        elif type(d.value) is float:
+            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_float_obj) }},', name=d.name, fullname=d.fullname)
+        elif type(d.value) is tuple:
+            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_0_{i}_tuple_obj) }},', name=d.name, fullname=d.fullname, i=i)
+        else:
+            raise TypeError
+
 
 def generate_var(src, v):
-    if type(v[1]) is str:
-        src.append('static ' + python_type_to_c_type[type(v[1])] + ' ' + v[0] + '\t= ' + '"' + v[1] + '"')
+    #TODO
+    #print(v.fullname, v.value)
+    if type(v.value) is str:
+        src.append('static ' + python_type_to_c_type[type(v.value)] + ' ' + v.fullname + '\t= ' + '"' + v.value + '";')
     else:
-        src.append('static ' + python_type_to_c_type[type(v[1])] + ' ' + v[0] + '\t= ' + str(v[1]))
+        src.append('static ' + python_type_to_c_type[type(v.value)] + ' ' + v.fullname + '\t= ' + str(v.value) + ';')
+
 
 def generate_function(src, f):
-
     src.append('// ' + f.get_prototype())
 
     # special case for constructor
@@ -317,18 +413,27 @@ def generate_class(src, c):
     src.append('}} mp_obj_{classname}_t;', classname=c.name)
     src.append('')
 
+    if len(c.defines) > 0:
+        src.append('// {classname} constants', classname=c.name)
+    for indx, d in enumerate(c.defines):
+        generate_define(src, d, 0, indx)
+    if len(c.defines) > 0:
+        src.append('')
+
+    if len(c.methods) > 0:
+        src.append('// Defining {classname} methods', classname=c.name)
     for f in c.methods:
         generate_function(src, f)
 
     src.append('// {classname} stuff', classname=c.name)
-    src.append('')
-
     src.append('STATIC const mp_rom_map_elem_t mod_{module}_{classname}_locals_dict_table[] = {{', classname=c.name)
     for f in c.methods:
         if f.name == '__init__':
             continue
         src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{classname}_{function}_obj) }},', classname=c.name, function=f.name)
+    register_defines(src, c.defines)
     src.append('}};')
+
     src.append('STATIC MP_DEFINE_CONST_DICT(mod_{module}_{classname}_locals_dict, mod_{module}_{classname}_locals_dict_table);', classname=c.name)
     src.append('')
 
@@ -354,19 +459,27 @@ def generate(module, force=False):
         src.append('#if MICROPY_PY_{MODULE}')
     src.append('')
 
-    for v in module.defines:
-        generate_define(src, v)
+    if len(module.defines) > 0:
+        src.append('// Module constants declarations')
+    for indx, d in enumerate(module.defines):
+        generate_define(src, d, 0, indx)
     if len(module.defines) > 0:
         src.append('')
 
+    if len(module.vars) > 0:
+        src.append('// Module variables declarations')
     for v in module.vars:
         generate_var(src, v)
     if len(module.vars) > 0:
         src.append('')
 
+    if len(module.functions) > 0:
+        src.append('// Defining module functions')
     for f in module.functions:
         generate_function(src, f)
 
+    if len(module.classes) > 0:
+        src.append('// Defining classes')
     for c in module.classes:
         generate_class(src, c)
 
@@ -378,8 +491,11 @@ def generate(module, force=False):
 
     for f in module.functions:
         src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{function}_obj) }},', function=f.name)
+
     for c in module.classes:
         src.append('    {{ MP_ROM_QSTR(MP_QSTR_{classname}), MP_ROM_PTR(&mod_{module}_{classname}_type) }},', classname=c.name)
+
+    register_defines(src, module.defines)
 
     src.append('}};')
     src.append('STATIC MP_DEFINE_CONST_DICT(mod_{module}_globals, mod_{module}_globals_table);')
