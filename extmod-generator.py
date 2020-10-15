@@ -348,10 +348,10 @@ def generate(module, force=False):
     src = Source(module)
 
     if IS_EXTERNAL_MODULE:
-        src.append('')
-        src.append(headers())
         src.append('#define MODULE_{MODULE}_ENABLED (1) // you may copy this line to the mpconfigport.h')
         src.append('#if MODULE_{MODULE}_ENABLED')
+        src.append('')
+        src.append(headers())
     else:
         src.append('#if MICROPY_PY_{MODULE}')
     src.append('')
@@ -372,9 +372,10 @@ def generate(module, force=False):
     for c in module.classes:
         generate_class(src, c)
 
-    src.append('// module stuff')
+    #src.append('// module stuff')
     src.append('')
-    src.append('STATIC const mp_rom_map_elem_t mp_module_{module}_globals_table[] = {{')
+    src.append("// Set up the module properties")
+    src.append('STATIC const mp_rom_map_elem_t mod_{module}_globals_table[] = {{')
     src.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},')
 
     for f in module.functions:
@@ -383,17 +384,18 @@ def generate(module, force=False):
         src.append('    {{ MP_ROM_QSTR(MP_QSTR_{classname}), MP_ROM_PTR(&mod_{module}_{classname}_type) }},', classname=c.name)
 
     src.append('}};')
-    src.append('STATIC MP_DEFINE_CONST_DICT(mp_module_{module}_globals, mp_module_{module}_globals_table);')
+    src.append('STATIC MP_DEFINE_CONST_DICT(mod_{module}_globals, mod_{module}_globals_table);')
     src.append('')
 
-    src.append('const mp_obj_module_t mp_module_{module} = {{')
+    src.append("// Define the module object")
+    src.append('const mp_obj_module_t mod_{module}_cmodule = {{')
     src.append('    .base = {{ &mp_type_module }},')
-    src.append('    .name = MP_QSTR_{module},')
-    src.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,')
+    src.append('    //.name = MP_QSTR_{module}, // absent')
+    src.append('    .globals = (mp_obj_dict_t*)&mod_{module}_globals,')
     src.append('}};')
     if IS_EXTERNAL_MODULE:
         src.append("// Register the module")
-        src.append('MP_REGISTER_MODULE(MP_QSTR_{module}, {module}_cmodule, MODULE_{MODULE}_ENABLED);')
+        src.append('MP_REGISTER_MODULE(MP_QSTR_{module}, mod_{module}_cmodule, MODULE_{MODULE}_ENABLED);')
         src.append('')
         src.append('#endif // MODULE_{MODULE}_ENABLED')
     else:
