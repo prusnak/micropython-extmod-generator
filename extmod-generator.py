@@ -11,6 +11,8 @@ import types
 
 import templates
 
+IS_EXTERNAL_MODULE = True # set False if core port module
+
 SIMPLE_TYPES = (int, float, bool, str) # tuple, list, dict
 
 class Function(object):
@@ -162,7 +164,10 @@ class Source(object):
 
     @property
     def csource_filename(self):
-        return os.path.join(self.module.path, 'mod{module}.c'.format(module=self.module.name))
+        if IS_EXTERNAL_MODULE:
+            return os.path.join(self.module.path, '{module}.c'.format(module=self.module.name))
+        else:
+            return os.path.join(self.module.path, 'mod{module}.c'.format(module=self.module.name))
 
     @property
     def qstrdefs_filename(self):
@@ -183,7 +188,10 @@ class Source(object):
         if 'Q(__name__)' in self.qstrdefs:
             self.qstrdefs.remove('Q(__name__)')
         with open(self.qstrdefs_filename, 'w') as f:
-            f.write('#if MICROPY_PY_{MODULE}\n'.format(MODULE=self.module.NAME))
+            if IS_EXTERNAL_MODULE:
+                f.write('#if MODULE_{MODULE}_ENABLED\n'.format(MODULE=self.module.NAME))
+            else:
+                f.write('#if MICROPY_PY_{MODULE}\n'.format(MODULE=self.module.NAME))
             f.write('\n'.join(self.qstrdefs) + '\n')
             f.write('#endif\n')
         print('Saved qstrdefs as {fn}'.format(fn=self.qstrdefs_filename))
@@ -205,6 +213,24 @@ python_type_to_c_type = {
     #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
     None: "NULL"
 }
+
+
+def headers():
+    return '''// Include required definitions first.
+#include "py/obj.h"
+#include "py/objstr.h"
+#include "py/objtuple.h"
+#include "py/runtime.h"
+#include "py/builtin.h"
+
+#include "objfloat.h"
+
+    /*
+    // Example exception for any generated function
+    if (some_val == 0) {
+        mp_raise_ValueError("'some_val' can't be zero!");
+    }
+    */'''
 
 def generate_define(src, v):
     if type(v[1]) is str:
@@ -324,7 +350,13 @@ def generate(module, force=False):
     print('Generating source code:')
     src = Source(module)
 
-    src.append('#if MICROPY_PY_{MODULE}')
+    if IS_EXTERNAL_MODULE:
+        src.append('')
+        src.append(headers())
+        src.append('#define MODULE_{MODULE}_ENABLED (1) // you may copy this line to the mpconfigport.h')
+        src.append('#if MODULE_{MODULE}_ENABLED')
+    else:
+        src.append('#if MICROPY_PY_{MODULE}')
     src.append('')
 
     for v in module.defines:
@@ -362,8 +394,14 @@ def generate(module, force=False):
     src.append('    .name = MP_QSTR_{module},')
     src.append('    .globals = (mp_obj_dict_t*)&mp_module_{module}_globals,')
     src.append('}};')
-    src.append('')
-    src.append('#endif // MICROPY_PY_{MODULE}')
+    if IS_EXTERNAL_MODULE:
+        src.append("// Register the module")
+        src.append('MP_REGISTER_MODULE(MP_QSTR_{module}, {module}_cmodule, MODULE_{MODULE}_ENABLED);')
+        src.append('')
+        src.append('#endif // MODULE_{MODULE}_ENABLED')
+    else:
+        src.append('')
+        src.append('#endif // MICROPY_PY_{MODULE}')
 
     print('Done')
 
