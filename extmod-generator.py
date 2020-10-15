@@ -440,7 +440,13 @@ def generate_class(src, c):
     src.append('STATIC const mp_obj_type_t mod_{module}_{classname}_type = {{', classname=c.name)
     src.append('    {{ &mp_type_type }},')
     src.append('    .name = MP_QSTR_{classname},', classname=c.name)
-    src.append('    .make_new = mod_{module}_{classname}_make_new,', classname=c.name)
+    found = False
+    for e in c.methods:
+        if e.name == '__init__':
+            found = True
+            break
+    if found:
+        src.append('    .make_new = mod_{module}_{classname}_make_new,', classname=c.name)
     src.append('    .locals_dict = (void*)&mod_{module}_{classname}_locals_dict,', classname=c.name)
     src.append('}};')
     src.append('')
