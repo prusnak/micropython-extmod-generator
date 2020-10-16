@@ -99,14 +99,15 @@ class Function(GenericName):
 
 
 class Class(object):
-    def __init__(self, name):
+    def __init__(self, name, class_instance):
         self.name = name
+        self.class_instance = class_instance
         self.methods = []
         self.defines = []
         self.vars = []
 
-    def add_method(self, name, func, argspec):
-        m = Function(name, func, argspec, classname=self.name)
+    def add_method(self, name, func_instance, argspec):
+        m = Function(name, func_instance, argspec, classname=self.name)
         self.methods.append(m)
 
 
@@ -144,7 +145,7 @@ class Module(object):
                 else:
                     self.vars.append(Value(n, a))
             elif isinstance(a, type):  # class
-                c = Class(n)
+                c = Class(n, a)
                 for m in dir(a):
                     b = getattr(a, m)
                     if isinstance(b, types.FunctionType):  # method
@@ -427,7 +428,14 @@ def generate_function(src, f):
 
 
 def generate_class(src, c):
-    src.append('// class {classname}(object):', classname=c.name)
+    parents = ''
+    for base in c.class_instance.__bases__:
+        parents += (base.__name__ + ', ')
+    if parents[-2:] == ', ':
+        parents = parents[:-2]
+    src.append('// class {classname}({parents}):', classname=c.name, parents=parents)
+    if c.class_instance.__doc__ is not None:
+        src.append('/*' + format_comment(c.class_instance.__doc__) + '*/')
     src.append('typedef struct _mp_obj_{classname}_t {{', classname=c.name)
     src.append('    mp_obj_base_t base;')
     src.append('}} mp_obj_{classname}_t;', classname=c.name)
