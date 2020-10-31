@@ -25,7 +25,28 @@
  */
 
 
-#if MICROPY_PY_EXAMPLE
+/*
+This is a module help.  Put it into genarated C code.
+*/
+
+#define MODULE_EXAMPLE_ENABLED (1) // you may copy this line to the mpconfigport.h
+#if MODULE_EXAMPLE_ENABLED
+
+// Include required definitions first.
+#include "py/obj.h"
+#include "py/objstr.h"
+#include "py/objtuple.h"
+#include "py/runtime.h"
+#include "py/builtin.h"
+
+#include "objfloat.h"
+
+    /*
+    // Example exception for any generated function
+    if (some_val == 0) {
+        mp_raise_ValueError("'some_val' can't be zero!");
+    }
+    */
 
 // Module constants declarations
 STATIC const mp_int_t CONST1 = 11;
@@ -156,6 +177,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_q_obj, mod_example_func_q);
 
 // Defining classes
 // class Class(object):
+/*
+Class constants are supported
+*/
 typedef struct _mp_obj_Class_t {
     mp_obj_base_t base;
 } mp_obj_Class_t;
@@ -169,6 +193,9 @@ STATIC const bool *Class_PERIODIC = MP_ROM_TRUE;
 
 // Defining Class methods
 // def Class.__del__(self)
+/*
+We need destructor too 
+*/
 STATIC mp_obj_t mod_example_Class___del__(mp_obj_t self) {
     // TODO
     return mp_const_none;
@@ -309,5 +336,7 @@ const mp_obj_module_t mod_example_cmodule = {
     //.name = MP_QSTR_example, // absent
     .globals = (mp_obj_dict_t*)&mod_example_globals,
 };
+// Register the module
+MP_REGISTER_MODULE(MP_QSTR_example, mod_example_cmodule, MODULE_EXAMPLE_ENABLED);
 
-#endif // MICROPY_PY_EXAMPLE
+#endif // MODULE_EXAMPLE_ENABLED
