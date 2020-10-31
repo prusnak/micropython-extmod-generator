@@ -43,32 +43,27 @@ class Function(GenericName):
         self.argspec = argspec
         args = argspec.args
 
-        if argspec.varargs is None and argspec.varkw is None and argspec.defaults is None:
+        self.args_min = -1
+        self.args_max = -1
+        if (argspec.varargs is None) and (argspec.varkw is None) and (argspec.defaults is None):
             if len(args) >= 0 and len(args) <= 3:
                 self.type = str(len(args))
             else:
                 self.type = 'var_between'
                 self.args_min = len(args)
                 self.args_max = len(args)
-            return
-
-        if argspec.varargs is None and argspec.varkw is None:
+        elif (argspec.varargs is None) and (argspec.varkw is None): # and (argspec.defaults is None):
             self.type = 'var_between'
             self.args_min = len(args) - len(argspec.defaults)
             self.args_max = len(args)
-            return
-
-        if argspec.varkw is None and argspec.defaults is None:
+        elif (argspec.varkw is None) and (argspec.defaults is None):
             self.type = 'var'
             self.args_min = len(args)
-            return
-
-        if argspec.varargs is None and argspec.defaults is None:
+        elif (argspec.varargs is None) and (argspec.defaults is None):
             self.type = 'kw'
             self.args_min = len(args)
-            return
-
-        raise Exception('Unsupported function type')
+        else:
+            raise Exception('Unsupported function type')
 
     def get_prototype(self):
         def anot(s):
@@ -187,7 +182,8 @@ class Source(object):
         self.lines.append(line)
 
     def append_str(self, line):
-        self.lines.append(line)
+        if line is not None:
+            self.lines.append(line)
 
     def save(self):
         with open(self.csource_filename, 'w') as f:
@@ -311,14 +307,24 @@ def generate_define_tuple(src, name, level, indx, d):
         src.append('')
 
 
-def register_defines(src, defines):
+def register_defines(src, defines, classname=None):
+    if len(defines):
+        src.append('    #define USE_VALUE'+(('_'+classname) if classname else '')+' // Use VALUE from the Python stab code or NAME(aka #define NAME) from include files when this line is commented out')
     for i, d in enumerate(defines):
         if d.value is None:
             src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_NONE }},', name=d.name)
         elif type(d.value) is bool:
+                src.append('    #ifdef USE_VALUE')
             src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), ' + ('MP_ROM_TRUE' if d.value else 'MP_ROM_FALSE') + ' }},', name=d.name)
+                src.append('    #else')
+                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({name}) }},', name=d.name)
+                src.append('    #endif')
         elif type(d.value) is int:
+                src.append('    #ifdef USE_VALUE')
             src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({value}) }},', name=d.name, value=d.value)
+                src.append('    #else')
+                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({name}) }},', name=d.name)
+                src.append('    #endif')
         elif type(d.value) is str:
             src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_str_obj) }},', name=d.name, fullname=d.fullname, value=d.value)
         elif type(d.value) is float:
@@ -340,9 +346,9 @@ def generate_var(src, v):
 
 def format_comment(doc):
     lines = doc.splitlines()
-    while lines[len(lines)-1].strip() == '':  # delete the last empty lines
+    while (len(lines) > 0) and (lines[len(lines)-1].strip() == ''):  # delete the last empty lines
         lines.pop(len(lines)-1)
-    while len(lines[0].strip()) == 0:  # delete leading empty lines
+    while (len(lines) > 0) and (len(lines[0].strip()) == 0):  # delete leading empty lines
         lines.pop(0)
     for i in range(len(lines)):  # truncate spaces lines
         if len(lines[i].strip()) == 0:
@@ -389,6 +395,14 @@ def generate_function(src, f):
         src.append('    return MP_OBJ_FROM_PTR(self);')
         src.append('}}')
         src.append('')
+        
+        src.append('STATIC mp_obj_t {module}_{classname}_print(const mp_print_t *print, mp_obj_t self_obj, mp_print_kind_t kind) {{', classname=f.classname)
+        src.append('    {module}_{classname}_obj_t *self = MP_OBJ_TO_PTR(self_obj);', classname=f.classname)
+
+        src.append('    mp_printf(print, "{classname}()");', classname=f.classname)
+        src.append("")
+        src.append('}}')
+        src.append('')
         return
 
     if f.type == '0':
@@ -410,6 +424,10 @@ def generate_function(src, f):
 
     src.append('    // TODO')
     src.append('    return mp_const_none;')
+    
+    src.append("")
+    src.append_str(ret_val_return(sig.return_annotation))
+    
     src.append('}}')
 
     if f.type == '0':
@@ -455,6 +473,11 @@ def generate_class(src, c):
     src.append('STATIC const mp_obj_type_t {module}_{classname}_type;', classname=c.name)
     src.append('')
     
+    src.append('typedef struct _mp_obj_{module}_{classname}_t {{', classname=c.name)
+    src.append('    mp_obj_base_t base;')
+    src.append('}} mp_obj_{module}_{classname}_t;', classname=c.name)
+    src.append('')
+    
     if len(c.methods) > 0:
         src.append('// Defining {classname} methods', classname=c.name)
     for f in c.methods:
@@ -467,7 +490,7 @@ def generate_class(src, c):
         if f.name == '__init__':
             continue
         src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&{module}_{classname}_{function}_obj) }},', classname=c.name, function=f.name)
-    register_defines(src, c.defines)
+    register_defines(src, c.defines, classname=c.name)
     src.append('}};')
 
     src.append('STATIC MP_DEFINE_CONST_DICT({module}_{classname}_locals_dict, {module}_{classname}_locals_dict_table);', classname=c.name)
@@ -484,7 +507,8 @@ def generate_class(src, c):
             break
     if found:
         src.append('    .make_new = {module}_{classname}_make_new,', classname=c.name)
-    src.append('    .locals_dict = (void*)&{module}_{classname}_locals_dict,', classname=c.name)
+        src.append('    //.print = {module}_{classname}_print,', classname=c.name)
+    src.append('    .locals_dict = (mp_obj_dict_t*)&{module}_{classname}_locals_dict,', classname=c.name)
     src.append('}};')
     src.append('')
 
