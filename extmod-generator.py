@@ -365,7 +365,7 @@ def generate_function(src, f):
 
     # special case for constructor
     if f.name == '__init__':
-        src.append('STATIC mp_obj_t mod_{module}_{classname}_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {{', classname=f.classname)
+        src.append('STATIC mp_obj_t {module}_{classname}_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {{', classname=f.classname)
         if f.type == '0':
             pass  # should not happen
         elif f.type == '1':
@@ -388,19 +388,19 @@ def generate_function(src, f):
         return
 
     if f.type == '0':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(void) {{', function=f.fullname)
+        src.append('STATIC mp_obj_t {module}_{function}(void) {{', function=f.fullname)
     elif f.type == '1':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}) {{', function=f.fullname, args=f.argspec.args)
+        src.append('STATIC mp_obj_t {module}_{function}(mp_obj_t {args[0]}) {{', function=f.fullname, args=f.argspec.args)
     elif f.type == '2':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}) {{', function=f.fullname, args=f.argspec.args)
+        src.append('STATIC mp_obj_t {module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}) {{', function=f.fullname, args=f.argspec.args)
     elif f.type == '3':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}, mp_obj_t {args[2]}) {{', function=f.fullname, args=f.argspec.args)
+        src.append('STATIC mp_obj_t {module}_{function}(mp_obj_t {args[0]}, mp_obj_t {args[1]}, mp_obj_t {args[2]}) {{', function=f.fullname, args=f.argspec.args)
     elif f.type == 'var':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.fullname)
+        src.append('STATIC mp_obj_t {module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.fullname)
     elif f.type == 'var_between':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.fullname)
+        src.append('STATIC mp_obj_t {module}_{function}(size_t n_args, const mp_obj_t *args) {{', function=f.fullname)
     elif f.type == 'kw':
-        src.append('STATIC mp_obj_t mod_{module}_{function}(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {{', function=f.fullname)
+        src.append('STATIC mp_obj_t {module}_{function}(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {{', function=f.fullname)
     else:
         raise Exception('Unknown function type: {type}'.format(type=f.type))
 
@@ -409,19 +409,19 @@ def generate_function(src, f):
     src.append('}}')
 
     if f.type == '0':
-        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_0({module}_{function}_obj, {module}_{function});', function=f.fullname)
     elif f.type == '1':
-        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_1({module}_{function}_obj, {module}_{function});', function=f.fullname)
     elif f.type == '2':
-        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_2({module}_{function}_obj, {module}_{function});', function=f.fullname)
     elif f.type == '3':
-        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_{module}_{function}_obj, mod_{module}_{function});', function=f.fullname)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_3({module}_{function}_obj, {module}_{function});', function=f.fullname)
     elif f.type == 'var':
-        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.fullname, args_min=f.args_min)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_VAR({module}_{function}_obj, {args_min}, {module}_{function});', function=f.fullname, args_min=f.args_min)
     elif f.type == 'var_between':
-        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_{module}_{function}_obj, {args_min}, {args_max}, mod_{module}_{function});', function=f.fullname, args_min=f.args_min, args_max=f.args_max)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN({module}_{function}_obj, {args_min}, {args_max}, {module}_{function});', function=f.fullname, args_min=f.args_min, args_max=f.args_max)
     elif f.type == 'kw':
-        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_{module}_{function}_obj, {args_min}, mod_{module}_{function});', function=f.fullname, args_min=f.args_min)
+        src.append('STATIC MP_DEFINE_CONST_FUN_OBJ_KW({module}_{function}_obj, {args_min}, {module}_{function});', function=f.fullname, args_min=f.args_min)
     else:
         raise Exception('Unknown function type: {type}'.format(type=f.type))
     src.append('')
@@ -454,18 +454,18 @@ def generate_class(src, c):
         generate_function(src, f)
 
     src.append('// {classname} stuff', classname=c.name)
-    src.append('STATIC const mp_rom_map_elem_t mod_{module}_{classname}_locals_dict_table[] = {{', classname=c.name)
+    src.append('STATIC const mp_rom_map_elem_t {module}_{classname}_locals_dict_table[] = {{', classname=c.name)
     for f in c.methods:
         if f.name == '__init__':
             continue
-        src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{classname}_{function}_obj) }},', classname=c.name, function=f.name)
+        src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&{module}_{classname}_{function}_obj) }},', classname=c.name, function=f.name)
     register_defines(src, c.defines)
     src.append('}};')
 
-    src.append('STATIC MP_DEFINE_CONST_DICT(mod_{module}_{classname}_locals_dict, mod_{module}_{classname}_locals_dict_table);', classname=c.name)
+    src.append('STATIC MP_DEFINE_CONST_DICT({module}_{classname}_locals_dict, {module}_{classname}_locals_dict_table);', classname=c.name)
     src.append('')
 
-    src.append('STATIC const mp_obj_type_t mod_{module}_{classname}_type = {{', classname=c.name)
+    src.append('STATIC const mp_obj_type_t {module}_{classname}_type = {{', classname=c.name)
     src.append('    {{ &mp_type_type }},')
     src.append('    .name = MP_QSTR_{classname},', classname=c.name)
     found = False
@@ -474,8 +474,8 @@ def generate_class(src, c):
             found = True
             break
     if found:
-        src.append('    .make_new = mod_{module}_{classname}_make_new,', classname=c.name)
-    src.append('    .locals_dict = (void*)&mod_{module}_{classname}_locals_dict,', classname=c.name)
+        src.append('    .make_new = {module}_{classname}_make_new,', classname=c.name)
+    src.append('    .locals_dict = (void*)&{module}_{classname}_locals_dict,', classname=c.name)
     src.append('}};')
     src.append('')
 
@@ -523,30 +523,30 @@ def generate(module, force=False):
     #src.append('// module stuff')
     src.append('')
     src.append("// Set up the module properties")
-    src.append('STATIC const mp_rom_map_elem_t mod_{module}_globals_table[] = {{')
+    src.append('STATIC const mp_rom_map_elem_t {module}_globals_table[] = {{')
     src.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},')
 
     for f in module.functions:
-        src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&mod_{module}_{function}_obj) }},', function=f.name)
+        src.append('    {{ MP_ROM_QSTR(MP_QSTR_{function}), MP_ROM_PTR(&{module}_{function}_obj) }},', function=f.name)
 
     for c in module.classes:
-        src.append('    {{ MP_ROM_QSTR(MP_QSTR_{classname}), MP_ROM_PTR(&mod_{module}_{classname}_type) }},', classname=c.name)
+        src.append('    {{ MP_ROM_QSTR(MP_QSTR_{classname}), MP_ROM_PTR(&{module}_{classname}_type) }},', classname=c.name)
 
     register_defines(src, module.defines)
 
     src.append('}};')
-    src.append('STATIC MP_DEFINE_CONST_DICT(mod_{module}_globals, mod_{module}_globals_table);')
+    src.append('STATIC MP_DEFINE_CONST_DICT({module}_globals, {module}_globals_table);')
     src.append('')
 
     src.append("// Define the module object")
-    src.append('const mp_obj_module_t mod_{module}_cmodule = {{')
+    src.append('const mp_obj_module_t {module}_cmodule = {{')
     src.append('    .base = {{ &mp_type_module }},')
     src.append('    //.name = MP_QSTR_{module}, // absent')
-    src.append('    .globals = (mp_obj_dict_t*)&mod_{module}_globals,')
+    src.append('    .globals = (mp_obj_dict_t*)&{module}_globals,')
     src.append('}};')
     if IS_EXTERNAL_MODULE:
         src.append("// Register the module")
-        src.append('MP_REGISTER_MODULE(MP_QSTR_{module}, mod_{module}_cmodule, MODULE_{MODULE}_ENABLED);')
+        src.append('MP_REGISTER_MODULE(MP_QSTR_{module}, {module}_cmodule, MODULE_{MODULE}_ENABLED);')
         src.append('')
         src.append('#endif // MODULE_{MODULE}_ENABLED')
     else:
