@@ -21,8 +21,7 @@ def func_b(arg1: int) -> None:
     pass
 
 def func_c(arg1: int, arg2: int) -> int:
-    res = arg1 + arg2 * arg2 
-    return res
+    pass
 
 def func_d(arg1: bool, arg2: str, arg3: tuple) -> int:
     pass

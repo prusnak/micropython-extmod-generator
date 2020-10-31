@@ -99,14 +99,15 @@ class Function(GenericName):
 
 
 class Class(object):
-    def __init__(self, name):
+    def __init__(self, name, class_instance):
         self.name = name
+        self.class_instance = class_instance
         self.methods = []
         self.defines = []
         self.vars = []
 
-    def add_method(self, name, func, argspec):
-        m = Function(name, func, argspec, classname=self.name)
+    def add_method(self, name, func_instance, argspec):
+        m = Function(name, func_instance, argspec, classname=self.name)
         self.methods.append(m)
 
 
@@ -144,7 +145,7 @@ class Module(object):
                 else:
                     self.vars.append(Value(n, a))
             elif isinstance(a, type):  # class
-                c = Class(n)
+                c = Class(n, a)
                 for m in dir(a):
                     b = getattr(a, m)
                     if isinstance(b, types.FunctionType):  # method
@@ -181,15 +182,12 @@ class Source(object):
     def append(self, line, **kwargs):
         kwargs['module'] = self.module.name
         kwargs['MODULE'] = self.module.NAME
-        try:
-            #print('line>>>', line, '<<<line')
-            line = line.format(**kwargs)
-            self.qstrdefs += re.findall(r'MP_QSTR_[_a-zA-Z0-9]+', line)
-            self.lines.append(line)
-        except (KeyError, ValueError) as e:
-            #print('line>>>', line, '<<<line')
-            #print(e)
-            self.lines.append(line)
+        line = line.format(**kwargs)
+        self.qstrdefs += re.findall(r'MP_QSTR_[_a-zA-Z0-9]+', line)
+        self.lines.append(line)
+
+    def append_str(self, line):
+        self.lines.append(line)
 
     def save(self):
         with open(self.csource_filename, 'w') as f:
@@ -289,7 +287,7 @@ def generate_define_tuple(src, name, level, indx, d):
         elif type(e) is float:
             src.append('STATIC const MP_DEFINE_FLOAT_OBJ({name}_{level}_{i}_float_obj, {value});', name=name, level=level, i=i, value=e)
 
-    src.append('const mp_rom_obj_tuple_t %s_%d_%d_tuple_obj = {{&mp_type_tuple}, %d, {' % (name, level, indx, len(d)))
+    src.append_str('const mp_rom_obj_tuple_t %s_%d_%d_tuple_obj = {{&mp_type_tuple}, %d, {' % (name, level, indx, len(d)))
 
     for i, e in enumerate(d):
         if e is None:
@@ -307,7 +305,7 @@ def generate_define_tuple(src, name, level, indx, d):
         else:
             raise TypeError
 
-    src.append('},};')  # end of tuple
+    src.append_str('},};')  # end of tuple
 
     if level == 0:
         src.append('')
@@ -430,7 +428,14 @@ def generate_function(src, f):
 
 
 def generate_class(src, c):
-    src.append('// class {classname}(object):', classname=c.name)
+    parents = ''
+    for base in c.class_instance.__bases__:
+        parents += (base.__name__ + ', ')
+    if parents[-2:] == ', ':
+        parents = parents[:-2]
+    src.append('// class {classname}({parents}):', classname=c.name, parents=parents)
+    if c.class_instance.__doc__ is not None:
+        src.append('/*' + format_comment(c.class_instance.__doc__) + '*/')
     src.append('typedef struct _mp_obj_{classname}_t {{', classname=c.name)
     src.append('    mp_obj_base_t base;')
     src.append('}} mp_obj_{classname}_t;', classname=c.name)
@@ -480,14 +485,13 @@ def generate(module, force=False):
     src = Source(module)
 
     if module.module.__doc__ is not None:
-        print(module.module.__doc__)
         src.append('/*' + format_comment(module.module.__doc__) + '*/\n')
         
     if IS_EXTERNAL_MODULE:
         src.append('#define MODULE_{MODULE}_ENABLED (1) // you may copy this line to the mpconfigport.h')
         src.append('#if MODULE_{MODULE}_ENABLED')
         src.append('')
-        src.append(headers())
+        src.append_str(headers())
     else:
         src.append('#if MICROPY_PY_{MODULE}')
     src.append('')

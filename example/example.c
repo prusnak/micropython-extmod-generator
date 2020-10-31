@@ -25,6 +25,10 @@
  */
 
 
+/*
+This is a module help.  Put it into genarated C code.
+*/
+
 #define MODULE_EXAMPLE_ENABLED (1) // you may copy this line to the mpconfigport.h
 #if MODULE_EXAMPLE_ENABLED
 
@@ -173,6 +177,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_example_func_q_obj, mod_example_func_q);
 
 // Defining classes
 // class Class(object):
+/*
+Class constants are supported
+*/
 typedef struct _mp_obj_Class_t {
     mp_obj_base_t base;
 } mp_obj_Class_t;
@@ -186,6 +193,9 @@ STATIC const bool *Class_PERIODIC = MP_ROM_TRUE;
 
 // Defining Class methods
 // def Class.__del__(self)
+/*
+We need destructor too 
+*/
 STATIC mp_obj_t mod_example_Class___del__(mp_obj_t self) {
     // TODO
     return mp_const_none;
