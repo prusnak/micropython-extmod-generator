@@ -165,7 +165,7 @@ class Source(object):
     def __init__(self, module):
         self.module = module
         self.lines = []
-        self.lines.append(templates.header(year=self.module.year, author=self.module.author))
+        self.lines.append(templates.header(year=self.module.year, author=self.module.author, url='https://github.com/prusnak/micropython-extmod-generator', py_stab_source=module.module.__file__))
         self.qstrdefs = []
 
     @property
@@ -380,9 +380,13 @@ def generate_function(src, f):
             src.append('    mp_arg_check_num(n_args, n_kw, {args_min}, {args_max}, false);', args_min=f.args_min - 1, args_max=f.args_max - 1)
         elif f.type == 'kw':
             src.append('    mp_arg_check_num(n_args, n_kw, {args_min}, 999, true);', args_min=f.args_min - 1)
-        src.append('    mp_obj_{classname}_t *o = m_new_obj(mp_obj_{classname}_t);', classname=f.classname)
-        src.append('    o->base.type = type;')
-        src.append('    return MP_OBJ_FROM_PTR(o);')
+        else:
+            raise Exception('Unknown function type: {type}'.format(type=f.type))
+            
+        src.append('    mp_obj_{module}_{classname}_t *self = m_new_obj(mp_obj_{module}_{classname}_t);', classname=f.classname)
+        src.append('    self->base.type = &{module}_{classname}_type;', classname=f.classname)
+        src.append("")
+        src.append('    return MP_OBJ_FROM_PTR(self);')
         src.append('}}')
         src.append('')
         return
@@ -448,12 +452,16 @@ def generate_class(src, c):
     if len(c.defines) > 0:
         src.append('')
 
+    src.append('STATIC const mp_obj_type_t {module}_{classname}_type;', classname=c.name)
+    src.append('')
+    
     if len(c.methods) > 0:
         src.append('// Defining {classname} methods', classname=c.name)
     for f in c.methods:
         generate_function(src, f)
 
     src.append('// {classname} stuff', classname=c.name)
+    src.append('// Register class methods')
     src.append('STATIC const mp_rom_map_elem_t {module}_{classname}_locals_dict_table[] = {{', classname=c.name)
     for f in c.methods:
         if f.name == '__init__':
@@ -465,6 +473,7 @@ def generate_class(src, c):
     src.append('STATIC MP_DEFINE_CONST_DICT({module}_{classname}_locals_dict, {module}_{classname}_locals_dict_table);', classname=c.name)
     src.append('')
 
+    src.append('// Create the class-object itself')
     src.append('STATIC const mp_obj_type_t {module}_{classname}_type = {{', classname=c.name)
     src.append('    {{ &mp_type_type }},')
     src.append('    .name = MP_QSTR_{classname},', classname=c.name)
@@ -488,7 +497,7 @@ def generate(module, force=False):
         src.append('/*' + format_comment(module.module.__doc__) + '*/\n')
         
     if IS_EXTERNAL_MODULE:
-        src.append('#define MODULE_{MODULE}_ENABLED (1) // you may copy this line to the mpconfigport.h')
+        src.append('#define MODULE_{MODULE}_ENABLED (1) // you may relocate this line to the mpconfigport.h')
         src.append('#if MODULE_{MODULE}_ENABLED')
         src.append('')
         src.append_str(headers())
@@ -497,10 +506,12 @@ def generate(module, force=False):
     src.append('')
 
     if len(module.defines) > 0:
+        src.append('/*')
         src.append('// Module constants declarations')
     for indx, d in enumerate(module.defines):
         generate_define(src, d, 0, indx)
     if len(module.defines) > 0:
+        src.append('*/')
         src.append('')
 
     if len(module.vars) > 0:
@@ -520,8 +531,8 @@ def generate(module, force=False):
     for c in module.classes:
         generate_class(src, c)
 
-    #src.append('// module stuff')
     src.append('')
+    src.append('// module stuff')
     src.append("// Set up the module properties")
     src.append('STATIC const mp_rom_map_elem_t {module}_globals_table[] = {{')
     src.append('    {{ MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_{module}) }},')
@@ -541,7 +552,7 @@ def generate(module, force=False):
     src.append("// Define the module object")
     src.append('const mp_obj_module_t {module}_cmodule = {{')
     src.append('    .base = {{ &mp_type_module }},')
-    src.append('    //.name = MP_QSTR_{module}, // absent')
+    # src.append('    //.name = MP_QSTR_{module}, // absent')
     src.append('    .globals = (mp_obj_dict_t*)&{module}_globals,')
     src.append('}};')
     if IS_EXTERNAL_MODULE:
