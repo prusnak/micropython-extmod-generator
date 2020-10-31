@@ -392,6 +392,8 @@ def generate_function(src, f):
         src.append('    mp_obj_{module}_{classname}_t *self = m_new_obj(mp_obj_{module}_{classname}_t);', classname=f.classname)
         src.append('    self->base.type = &{module}_{classname}_type;', classname=f.classname)
         src.append("")
+        src.append(code(f))
+        src.append("")
         src.append('    return MP_OBJ_FROM_PTR(self);')
         src.append('}}')
         src.append('')
@@ -400,6 +402,8 @@ def generate_function(src, f):
         src.append('    {module}_{classname}_obj_t *self = MP_OBJ_TO_PTR(self_obj);', classname=f.classname)
 
         src.append('    mp_printf(print, "{classname}()");', classname=f.classname)
+        src.append("")
+        src.append(code(f))
         src.append("")
         src.append('}}')
         src.append('')
@@ -425,6 +429,8 @@ def generate_function(src, f):
     src.append('    // TODO')
     src.append('    return mp_const_none;')
     
+    src.append("")
+    src.append(code(f))
     src.append("")
     src.append_str(ret_val_return(sig.return_annotation))
     
@@ -616,6 +622,12 @@ def main():
 
     module = Module(args.module)
     generate(module, args.force_overwrite)
+
+def code(f):
+    try:
+        return f.func.code
+    except AttributeError:
+        return "\t//TODO: Your code here"
 
 
 if __name__ == "__main__":
