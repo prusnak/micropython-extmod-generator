@@ -314,17 +314,17 @@ def register_defines(src, defines, classname=None):
         if d.value is None:
             src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_NONE }},', name=d.name)
         elif type(d.value) is bool:
-                src.append('    #ifdef USE_VALUE')
+            src.append('    #ifdef USE_VALUE')
             src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), ' + ('MP_ROM_TRUE' if d.value else 'MP_ROM_FALSE') + ' }},', name=d.name)
-                src.append('    #else')
-                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({name}) }},', name=d.name)
-                src.append('    #endif')
+            src.append('    #else')
+            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({name}) }},', name=d.name)
+            src.append('    #endif')
         elif type(d.value) is int:
-                src.append('    #ifdef USE_VALUE')
+            src.append('    #ifdef USE_VALUE')
             src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({value}) }},', name=d.name, value=d.value)
-                src.append('    #else')
-                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({name}) }},', name=d.name)
-                src.append('    #endif')
+            src.append('    #else')
+            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({name}) }},', name=d.name)
+            src.append('    #endif')
         elif type(d.value) is str:
             src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_str_obj) }},', name=d.name, fullname=d.fullname, value=d.value)
         elif type(d.value) is float:
@@ -648,8 +648,9 @@ in_type_handler = {
     set: string_template("\tmp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
     object: string_template("\tmp_obj_t {0} args[ARG_{0}].u_obj;"),
     'self': string_template("\tmp_obj_{1}_{2}_t *{0} = MP_OBJ_TO_PTR({0}_obj);"),
-    inspect._empty: string_template("qqq"),
-    None: string_template("www")
+    inspect._empty: string_template("??? in_type_handler[inspect._empty]"),
+    None: string_template("??? in_type_handler[None]"),
+    type(None): string_template("??? in_type_handler[type(None)]")
     }
 
 in_type_handler_arr = {
@@ -662,8 +663,9 @@ in_type_handler_arr = {
     set: string_template("\tmp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array(args[{3}], &{0}_len, &{0});"),
     object: string_template("\tmp_obj_t {0} args[ARG_{0}].u_obj;"),
     'self': string_template("\tmp_obj_{1}_{2}_t *{0} = MP_OBJ_TO_PTR(args[{3}]);"),
-    inspect._empty: "eee",
-    None: "rrr"
+    inspect._empty: string_template("??? in_type_handler_arr[inspect._empty]"),
+    None: string_template("??? in_type_handler_arr[None]"),
+    type(None): string_template("??? in_type_handler_arr[type(None)]")
     }
 
 return_type_handler = {
