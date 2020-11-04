@@ -22,7 +22,7 @@ def func_b(arg1: int) -> None:
 
 def func_c(arg1: int, arg2: int) -> int:
     pass
-func_c.code = "    res = arg1 + arg2;"
+func_c.code = "    ret_val = arg1 + arg2;"
 
 def func_d(arg1: bool, arg2: str, arg3: tuple) -> int:
     pass

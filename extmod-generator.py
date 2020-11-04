@@ -33,8 +33,9 @@ class Value(GenericName):
 
 
 class Function(GenericName):
-    def __init__(self, name, func, argspec, classname=None):
+    def __init__(self, module_name, name, func, argspec, classname=None):
         super().__init__(name, classname)
+        self.module_name = module_name
         self.func = func    
         if classname:
             self.dotname = classname + '.' + name
@@ -94,7 +95,8 @@ class Function(GenericName):
 
 
 class Class(object):
-    def __init__(self, name, class_instance):
+    def __init__(self, module_name, name, class_instance):
+        self.module_name = module_name
         self.name = name
         self.class_instance = class_instance
         self.methods = []
@@ -102,12 +104,16 @@ class Class(object):
         self.vars = []
 
     def add_method(self, name, func_instance, argspec):
-        m = Function(name, func_instance, argspec, classname=self.name)
+        m = Function(self.module_name, name, func_instance, argspec, classname=self.name)
         self.methods.append(m)
 
 
 class Module(object):
     def __init__(self, name):
+        def strip_path(s):
+            n = s.rfind(".")
+            return s[n+1:]
+        
         importlib.invalidate_caches()
         print('Looking for module "{name}":'.format(name=name))
         try:
@@ -117,8 +123,8 @@ class Module(object):
         self.path = os.path.split(self.module.__file__)[0]
         print('Found {mod}'.format(mod=self.module))
         self.year = datetime.datetime.now().year
-        self.name = name
-        self.NAME = name.upper()
+        self.name = strip_path(name)
+        self.NAME = self.name.upper()
         try:
             self.author = self.module.__author__
         except:
@@ -130,7 +136,7 @@ class Module(object):
         for n in dir(self.module):
             a = getattr(self.module, n)
             if isinstance(a, types.FunctionType):  # function
-                f = Function(n, a, inspect.getfullargspec(a))
+                f = Function(self.name, n, a, inspect.getfullargspec(a))
                 self.functions.append(f)
             elif isinstance(a, CONSTANT_TYPES):
                 if (n[0:2] == '__') and (n[-2:] == '__'):  # and (n == n.lower())
@@ -140,7 +146,7 @@ class Module(object):
                 else:
                     self.vars.append(Value(n, a))
             elif isinstance(a, type):  # class
-                c = Class(n, a)
+                c = Class(self.name, n, a)
                 for m in dir(a):
                     b = getattr(a, m)
                     if isinstance(b, types.FunctionType):  # method
@@ -212,11 +218,11 @@ python_type_to_c_type = {
     dict: "???",
     set: "???",
     # tuple: string_template(
-    #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
+    #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_obj, &{0}_len, &{0});"),
     # list: string_template(
-    #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
+    #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_obj, &{0}_len, &{0});"),
     # set: string_template(
-    #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
+    #     "mp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_obj, &{0}_len, &{0});"),
     None: "NULL"
     }
 
@@ -309,30 +315,30 @@ def generate_define_tuple(src, name, level, indx, d):
 
 def register_defines(src, defines, classname=None):
     if len(defines):
-        src.append('    #define USE_VALUE'+(('_'+classname) if classname else '')+' // Use VALUE from the Python stab code or NAME(aka #define NAME) from include files when this line is commented out')
-    for i, d in enumerate(defines):
-        if d.value is None:
-            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_NONE }},', name=d.name)
-        elif type(d.value) is bool:
-            src.append('    #ifdef USE_VALUE')
-            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), ' + ('MP_ROM_TRUE' if d.value else 'MP_ROM_FALSE') + ' }},', name=d.name)
-            src.append('    #else')
-            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({name}) }},', name=d.name)
-            src.append('    #endif')
-        elif type(d.value) is int:
-            src.append('    #ifdef USE_VALUE')
-            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({value}) }},', name=d.name, value=d.value)
-            src.append('    #else')
-            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({name}) }},', name=d.name)
-            src.append('    #endif')
-        elif type(d.value) is str:
-            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_str_obj) }},', name=d.name, fullname=d.fullname, value=d.value)
-        elif type(d.value) is float:
-            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_float_obj) }},', name=d.name, fullname=d.fullname)
-        elif type(d.value) is tuple:
-            src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_0_{i}_tuple_obj) }},', name=d.name, fullname=d.fullname, i=i)
-        else:
-            raise TypeError
+        src.append('    #define USE_VALUE' + (('_' + classname) if classname else ' ') + '  // Use VALUE from the Python stab code or NAME(aka #define NAME) from include files when this line is commented out')
+        for i, d in enumerate(defines):
+            if d.value is None:
+                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_NONE }},', name=d.name)
+            elif type(d.value) is bool:
+                src.append('    #ifdef USE_VALUE' + (('_' + classname) if classname else ' ') + ' ')
+                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), ' + ('MP_ROM_TRUE' if d.value else 'MP_ROM_FALSE') + ' }},', name=d.name)
+                src.append('    #else')
+                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({name}) }},', name=d.name)
+                src.append('    #endif')
+            elif type(d.value) is int:
+                src.append('    #ifdef USE_VALUE' + (('_' + classname) if classname else ' ') + ' ')
+                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({value}) }},', name=d.name, value=d.value)
+                src.append('    #else')
+                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_INT({name}) }},', name=d.name)
+                src.append('    #endif')
+            elif type(d.value) is str:
+                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_str_obj) }},', name=d.name, fullname=d.fullname, value=d.value)
+            elif type(d.value) is float:
+                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_float_obj) }},', name=d.name, fullname=d.fullname)
+            elif type(d.value) is tuple:
+                src.append('    {{ MP_ROM_QSTR(MP_QSTR_{name}), MP_ROM_PTR(&{fullname}_0_{i}_tuple_obj) }},', name=d.name, fullname=d.fullname, i=i)
+            else:
+                raise TypeError
 
 
 def generate_var(src, v):
@@ -394,7 +400,9 @@ def generate_function(src, f):
         src.append('    mp_obj_{module}_{classname}_t *self = m_new_obj(mp_obj_{module}_{classname}_t);', classname=f.classname)
         src.append('    self->base.type = &{module}_{classname}_type;', classname=f.classname)
         src.append("")
+        src.append("/*")
         src.append_str(parse_params(f, sig.parameters))
+        src.append("*/")
         src.append(code(f))
         src.append("")
         src.append('    return MP_OBJ_FROM_PTR(self);')
@@ -402,7 +410,7 @@ def generate_function(src, f):
         src.append('')
         
         src.append('STATIC mp_obj_t {module}_{classname}_print(const mp_print_t *print, mp_obj_t self_obj, mp_print_kind_t kind) {{', classname=f.classname)
-        src.append('    {module}_{classname}_obj_t *self = MP_OBJ_TO_PTR(self_obj);', classname=f.classname)
+        src.append('    mp_obj_{module}_{classname}_t *self = MP_OBJ_TO_PTR(self_obj);', classname=f.classname)
 
         src.append('    mp_printf(print, "{classname}()");', classname=f.classname)
         src.append("")
@@ -429,7 +437,7 @@ def generate_function(src, f):
 #     else:
 #         raise Exception('Unknown function type: {type}'.format(type=f.type))
 
-    s = function_init(f"{f.func.__module__}_{f.fullname}")
+    s = function_init(f"{f.module_name}_{f.fullname}")
     s += function_params(f, sig.parameters)
     src.append_str(s)
 
@@ -643,9 +651,9 @@ in_type_handler = {
     float: string_template("\tmp_float_t {0} = mp_obj_get_float({0}_obj);"),
     bool: string_template("\tbool {0} = mp_obj_is_true({0}_obj);"),
     str: string_template("\tconst char* {0} = mp_obj_str_get_str({0}_obj);"),
-    tuple: string_template("\tmp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
-    list: string_template("\tmp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
-    set: string_template("\tmp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_arg, &{0}_len, &{0});"),
+    tuple: string_template("\tmp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_obj, &{0}_len, &{0});"),
+    list: string_template("\tmp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_obj, &{0}_len, &{0});"),
+    set: string_template("\tmp_obj_t *{0} = NULL;\n\tsize_t {0}_len = 0;\n\tmp_obj_get_array({0}_obj, &{0}_len, &{0});"),
     object: string_template("\tmp_obj_t {0} args[ARG_{0}].u_obj;"),
     'self': string_template("\tmp_obj_{1}_{2}_t *{0} = MP_OBJ_TO_PTR({0}_obj);"),
     inspect._empty: string_template("??? in_type_handler[inspect._empty]"),
@@ -823,9 +831,9 @@ def parse_params(f, params):
     if f.type == '0':        
         return None
     elif f.type in ['1', '2', '3']:
-        return ''.join([in_type_init(param, value.annotation, value.default)(param, f.func.__module__, f.classname)+'\n' for param, value in params.items()])
+        return ''.join([in_type_init(param, value.annotation, value.default)(param, f.module_name, f.classname)+'\n' for param, value in params.items()])
     elif f.type in ['var', 'var_between']:
-        return ''.join([in_type_init_arr(param, value.annotation, value.default)(param, f.func.__module__, f.classname, ind)+'\n' for ind, (param, value) in enumerate(params.items())])
+        return ''.join([in_type_init_arr(param, value.annotation, value.default)(param, f.module_name, f.classname, ind)+'\n' for ind, (param, value) in enumerate(params.items())])
     elif f.type == 'kw':
         return ''.join([kw_enum(params), kw_allowed_args(f.func, params), "", arg_array(f.func), "", arg_unpack(params)])
     else:
