@@ -29,7 +29,24 @@
 This is a module help.  Put it into genarated C code.
 */
 
-#if MICROPY_PY_EXAMPLE
+#define MODULE_EXAMPLE_ENABLED (1) // you may relocate this line to the mpconfigport.h
+#if MODULE_EXAMPLE_ENABLED
+
+// Include required definitions first.
+#include "py/obj.h"
+#include "py/objstr.h"
+#include "py/objtuple.h"
+#include "py/runtime.h"
+#include "py/builtin.h"
+
+#include "objfloat.h"
+
+    /*
+    // Example exception for any generated function
+    if (some_val == 0) {
+        mp_raise_ValueError("'some_val' can't be zero!");
+    }
+    */
 
 /*
 // Module constants declarations
@@ -439,5 +456,7 @@ const mp_obj_module_t example_cmodule = {
     .base = { &mp_type_module },
     .globals = (mp_obj_dict_t*)&example_globals,
 };
+// Register the module
+MP_REGISTER_MODULE(MP_QSTR_example, example_cmodule, MODULE_EXAMPLE_ENABLED);
 
-#endif // MICROPY_PY_EXAMPLE
+#endif // MODULE_EXAMPLE_ENABLED
