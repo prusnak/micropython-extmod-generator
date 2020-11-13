@@ -409,7 +409,7 @@ def generate_function(src, f):
         src.append('}}')
         src.append('')
         
-        src.append('STATIC mp_obj_t {module}_{classname}_print(const mp_print_t *print, mp_obj_t self_obj, mp_print_kind_t kind) {{', classname=f.classname)
+        src.append('STATIC void {module}_{classname}_print(const mp_print_t *print, mp_obj_t self_obj, mp_print_kind_t kind) {{', classname=f.classname)
         src.append('    mp_obj_{module}_{classname}_t *self = MP_OBJ_TO_PTR(self_obj);', classname=f.classname)
 
         src.append('    mp_printf(print, "{classname}()");', classname=f.classname)
@@ -448,7 +448,7 @@ def generate_function(src, f):
         src.append(ret_init)
 
 #     src.append('    // TODO')
-#     src.append('    return mp_const_none;')
+#     src.append('    return MP_ROM_NONE;')
     
     src.append("")
     src.append(code(f))
@@ -718,9 +718,9 @@ return_handler = {
     mp_obj_dict_store(ret_val, mp_obj_new_str("element2", 8), mp_obj_new_float(456.789));
     mp_obj_dict_store(ret_val, mp_obj_new_str("element3", 8), mp_obj_new_str("hello", 5));
     return ret_val;''',
-    object: '''\treturn mp_const_none; // TODO''',
-    inspect._empty: "\treturn mp_const_none;",
-    None: "\treturn mp_const_none;"
+    object: '''\treturn MP_ROM_NONE; // TODO''',
+    inspect._empty: "\treturn MP_ROM_NONE;",
+    None: "\treturn MP_ROM_NONE;"
     }
 
 shortened_types = {
