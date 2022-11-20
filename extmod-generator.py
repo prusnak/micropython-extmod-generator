@@ -36,7 +36,7 @@ class Function(GenericName):
     def __init__(self, module_name, name, func, argspec, classname=None):
         super().__init__(name, classname)
         self.module_name = module_name
-        self.func = func    
+        self.func = func
         if classname:
             self.dotname = classname + '.' + name
         else:
@@ -112,16 +112,38 @@ class Module(object):
     def __init__(self, name):
         def strip_path(s):
             n = s.rfind(".")
-            return s[n+1:]
-        
+            return s[n + 1:]
+
+        def strip_py_ext(s):
+            n = s.rfind(".py")
+            if n != -1:
+                return s[:n]
+            else:
+                return s
+
+        if name.rfind(".py") == len(name)-3 or name.find(":") != -1 or name.find("/") != -1 or name.find("\\") != -1:
+            module_name = strip_py_ext(name)
+            module_name = module_name.replace('/', '.').replace('\\', '.')
+            raise ImportError("Use the module name like '{}' instead of the file name '{}'.".format(module_name, name))
+
+        os_name = name.replace('.', os.path.sep)
+        os_p, os_n = os.path.split(os_name)
+        if os_p.rfind(os_n) != len(os_p) - len(os_n):
+            os_name = os_n + os.path.sep + os_n + ".py"
+            name = os_n + '.' + os_n
+            if os_p:
+                os_name = os_p + os.path.sep + os_name
+                name = os_p + '.' + name
+        else:
+            os_name += ".py"
+        if not os.path.exists(os_name):
+            raise FileNotFoundError(os_name)
+
         importlib.invalidate_caches()
-        print('Looking for module "{name}":'.format(name=name))
-        try:
-            self.module = importlib.import_module('{name}.{name}'.format(name=name))
-        except:
-            self.module = importlib.import_module('{name}'.format(name=name))
+        print("Looking for module '{name}' from '{os_name}':".format(name=name, os_name=os_name))
+        self.module = importlib.import_module('{name}'.format(name=name))
         self.path = os.path.split(self.module.__file__)[0]
-        print('Found {mod}'.format(mod=self.module))
+        print('Imported: {mod}'.format(mod=self.module))
         self.year = datetime.datetime.now().year
         self.name = strip_path(name)
         self.NAME = self.name.upper()
@@ -389,14 +411,14 @@ def generate_function(src, f):
         elif f.type == '3':
             src.append('    mp_arg_check_num(n_args, n_kw, 2, 2, false);')
         elif f.type == 'var':
-            src.append('    mp_arg_check_num(n_args, n_kw, {args_min}, 999, false);', args_min=f.args_min - 1)
+            src.append('    mp_arg_check_num(n_args, n_kw, {args_min}, MP_OBJ_FUN_ARGS_MAX, false);', args_min=f.args_min - 1)
         elif f.type == 'var_between':
             src.append('    mp_arg_check_num(n_args, n_kw, {args_min}, {args_max}, false);', args_min=f.args_min - 1, args_max=f.args_max - 1)
         elif f.type == 'kw':
-            src.append('    mp_arg_check_num(n_args, n_kw, {args_min}, 999, true);', args_min=f.args_min - 1)
+            src.append('    mp_arg_check_num(n_args, n_kw, {args_min}, MP_OBJ_FUN_ARGS_MAX, true);', args_min=f.args_min - 1)
         else:
             raise Exception('Unknown function type: {type}'.format(type=f.type))
-            
+
         src.append('    mp_obj_{module}_{classname}_t *self = m_new_obj(mp_obj_{module}_{classname}_t);', classname=f.classname)
         src.append('    self->base.type = &{module}_{classname}_type;', classname=f.classname)
         src.append("")
@@ -408,7 +430,7 @@ def generate_function(src, f):
         src.append('    return MP_OBJ_FROM_PTR(self);')
         src.append('}}')
         src.append('')
-        
+
         src.append('STATIC void {module}_{classname}_print(const mp_print_t *print, mp_obj_t self_obj, mp_print_kind_t kind) {{', classname=f.classname)
         src.append('    mp_obj_{module}_{classname}_t *self = MP_OBJ_TO_PTR(self_obj);', classname=f.classname)
 
@@ -449,12 +471,12 @@ def generate_function(src, f):
 
 #     src.append('    // TODO')
 #     src.append('    return MP_ROM_NONE;')
-    
+
     src.append("")
     src.append(code(f))
     src.append("")
     src.append_str(ret_val_return(sig.return_annotation))
-    
+
     src.append('}}')
 
     if f.type == '0':
@@ -495,12 +517,12 @@ def generate_class(src, c):
 
     src.append('STATIC const mp_obj_type_t {module}_{classname}_type;', classname=c.name)
     src.append('')
-    
+
     src.append('typedef struct _mp_obj_{module}_{classname}_t {{', classname=c.name)
     src.append('    mp_obj_base_t base;')
     src.append('}} mp_obj_{module}_{classname}_t;', classname=c.name)
     src.append('')
-    
+
     if len(c.methods) > 0:
         src.append('// Defining {classname} methods', classname=c.name)
     for f in c.methods:
@@ -542,7 +564,7 @@ def generate(module, force=False):
 
     if module.module.__doc__ is not None:
         src.append('/*' + format_comment(module.module.__doc__) + '*/\n')
-        
+
     if IS_EXTERNAL_MODULE:
         src.append('#define MODULE_{MODULE}_ENABLED (1) // you may relocate this line to the mpconfigport.h')
         src.append('#if MODULE_{MODULE}_ENABLED')
@@ -645,7 +667,7 @@ def string_template(base_str):
     def string_handle(*args, **kwargs):
         return base_str.format(*args, **kwargs)
     return string_handle
- 
+
 in_type_handler = {
     int: string_template("\tmp_int_t {0} = mp_obj_get_int({0}_obj);"),
     float: string_template("\tmp_float_t {0} = mp_obj_get_float({0}_obj);"),
@@ -788,7 +810,7 @@ def function_init(func_name):
 
 
 def function_params(f, params):
-    if f.type == '0':        
+    if f.type == '0':
         return "void) {"
     elif f.type in ('1', '2', '3'):
         params = ", ".join([f"mp_obj_t {x}_obj" for x in params])
@@ -813,12 +835,12 @@ def parse_params(f, params):
     :param params: Parameter signature from inspect.signature
     :return: list of strings defining the parsed parameters in c
     """
-    if f.type != '0':        
+    if f.type != '0':
         #for i, e in enumerate(params.items()):
         for e in params.items():
             param, value = e
             if value.annotation == inspect._empty: # and value.default == inspect._empty:
-                if (param == 'self'): 
+                if (param == 'self'):
                     pass
                 elif value.default != inspect._empty:
                     pass
@@ -828,7 +850,7 @@ def parse_params(f, params):
                     # raise TypeError()
                     return None
 
-    if f.type == '0':        
+    if f.type == '0':
         return None
     elif f.type in ['1', '2', '3']:
         return ''.join([in_type_init(param, value.annotation, value.default)(param, f.module_name, f.classname)+'\n' for param, value in params.items()])
