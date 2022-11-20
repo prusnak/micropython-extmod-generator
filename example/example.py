@@ -21,12 +21,9 @@ def func_b(arg1: int) -> None:
     pass
 
 def func_c(arg1: int, arg2: int) -> int:
-<<<<<<< HEAD
     pass
 
 def func_d(arg1: bool, arg2: str, arg3: tuple) -> int:
-=======
->>>>>>> b213639ff1336ee7bf9d36d406c33989f5e5c093
     pass
 func_c.code = "    ret_val = arg1 + arg2;"
 
@@ -113,4 +110,3 @@ class Class(ParentClass, object):
 
     def func_f(self, arg1:float, arg2: int, arg3:int, arg4:int, arg5: int=123) -> bytes:
         pass
-
