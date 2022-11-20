@@ -17,10 +17,17 @@ Program will look for file named `module/module.py` and generate the following f
 
 If a `module` argument is not provided, the default `example` will be used.
 
-Example
--------
-
+Examples
+--------
+```
+$ python.exe extmod-generator.py
+```
 [example/example.py](example/example.py) ⇒ [example/modexample.c](example/modexample.c) + [example/qstrdefs.h](example/qstrdefs.h)
+
+```
+$ python.exe extmod-generator.py example.consts
+```
+[example/consts/consts.py](example/consts/consts.py) ⇒ [example/consts/consts.c](example/consts/consts.c) + [example/consts/qstrdefs.h](example/consts/qstrdefs.h)
 
 License
 -------
